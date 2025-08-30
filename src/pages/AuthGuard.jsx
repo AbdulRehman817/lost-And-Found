@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
-import { Spinner } from "../Components/ui/spinner";
+import Spinner from "../components/Spinner";
 
 export default function AuthGuard({ children }) {
   const { isSignedIn, isLoaded } = useAuth();
