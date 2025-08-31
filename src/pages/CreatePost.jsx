@@ -26,7 +26,8 @@ export default function CreatePost() {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-      console.log("✅ Success:", res.data);
+      const data = res.json();
+      console.log("✅ Success:", data);
     } catch (err) {
       console.error("❌ Failed:", err);
     }

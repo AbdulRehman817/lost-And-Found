@@ -3,12 +3,10 @@ import { Link, useLocation } from "react-router-dom";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
-import { SignInButton, useUser } from "@clerk/clerk-react";
 import { cn } from "../lib/utils";
 import { Search, Bell } from "lucide-react";
 
 export default function Navbar() {
-  const { isSignedIn } = useUser();
   const location = useLocation();
 
   const navLinks = [

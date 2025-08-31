@@ -15,14 +15,6 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 export default function Layout() {
-  const location = useLocation();
-
-  // Paths where Sidebar should be hidden
-  const hideSidebarPaths = ["/", "/login", "/signup"];
-
-  // Check if current page is Home
-  const isHomePage = location.pathname === "/";
-
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-[#0B0B0C] text-white">
       {/* <Navbar /> */}
@@ -58,6 +50,7 @@ export default function Layout() {
               </AuthGuard>
             }
           />
+
           <Route
             path="/settings"
             element={

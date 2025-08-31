@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTrigger,
@@ -9,33 +9,64 @@ import {
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { ChevronDown } from "lucide-react";
+import { SignInButton, useUser, useClerk } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 
 export default function UserInfoDialog() {
   const [open, setOpen] = useState(false);
+  const { isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
+  const navigate = useNavigate();
 
-  // Example user data
-  const user = {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "https://api.dicebear.com/7.x/thumbs/svg?seed=user",
+  useEffect(() => {
+    // Redirect if not signed in
+    if (!isSignedIn) {
+      navigate("/login"); // Or "/" depending on your app
+    }
+  }, [isSignedIn, navigate]);
+
+  let emailAddress = user?.primaryEmailAddress?.emailAddress || "";
+  let username = user?.username || "";
+
+  const handleLogout = () => {
+    signOut();
+    setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1e293b] rounded-md transition-all">
-          <div className="flex items-center gap-3">
+        <button
+          className="
+            w-full flex items-center justify-between
+            px-5 py-3
+            bg-[#27293D] 
+            rounded-lg
+            hover:bg-[#353854]
+            transition-colors duration-200
+            cursor-pointer
+            shadow-sm
+          "
+          aria-label="User info menu"
+        >
+          <div className="flex items-center gap-4">
             <img
-              src={user.avatar}
-              alt="avatar"
-              className="w-8 h-8 rounded-full"
+              src={
+                user?.profileImageUrl ||
+                "https://api.dicebear.com/7.x/thumbs/svg?seed=user"
+              }
+              alt="User avatar"
+              className="w-9 h-9 rounded-full border border-[#5E81F4]"
             />
-            <div className="text-left text-sm">
-              <p className="font-medium">{user.name}</p>
-              <p className="text-xs text-muted-foreground">{user.email}</p>
+            <div className="text-left text-sm relative right-[4px]">
+              <p className="font-semibold text-gray-100 truncate max-w-[150px]">
+                {username || "Guest"}
+              </p>
+              <p className="text-xs text-gray-400 truncate max-w-[150px]">
+                {emailAddress || "Not signed in"}
+              </p>
             </div>
           </div>
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
         </button>
       </DialogTrigger>
 
@@ -46,26 +77,31 @@ export default function UserInfoDialog() {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col items-center gap-3">
+        {/* Left aligned user info */}
+        <div className="flex items-center gap-6">
           <img
-            src={user.avatar}
+            src={
+              user?.profileImageUrl ||
+              "https://api.dicebear.com/7.x/thumbs/svg?seed=user"
+            }
             alt="avatar"
             className="w-20 h-20 rounded-full border-2 border-gray-600"
           />
-          <div className="text-center">
-            <p className="text-lg font-semibold">{user.name}</p>
-            <p className="text-sm text-gray-400">{user.email}</p>
-          </div>
-        </div>
-
-        <div className="space-y-2 text-sm text-gray-300">
-          <div className="flex justify-between">
-            <span>Account Type:</span>
-            <span className="text-gray-400">Standard</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Member Since:</span>
-            <span className="text-gray-400">Jan 2024</span>
+          <div>
+            <p className="text-lg font-semibold">{username || "Guest"}</p>
+            <p className="text-sm text-gray-400">
+              {emailAddress || "Not signed in"}
+            </p>
+            <div className="mt-4 space-y-2 text-sm text-gray-300 max-w-xs">
+              <div className="flex justify-between">
+                <span>Account Type:</span>
+                <span className="text-gray-400">Standard</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Member Since:</span>
+                <span className="text-gray-400">Jan 2024</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -77,9 +113,20 @@ export default function UserInfoDialog() {
           >
             Close
           </Button>
-          <Button className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium shadow-md transition-all">
-            Log Out
-          </Button>
+          {isSignedIn ? (
+            <Button
+              className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium shadow-md transition-all"
+              onClick={handleLogout}
+            >
+              Log Out
+            </Button>
+          ) : (
+            <SignInButton>
+              <Button className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md transition-all">
+                Sign In
+              </Button>
+            </SignInButton>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

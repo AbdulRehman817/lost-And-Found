@@ -1,9 +1,29 @@
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Card, CardContent } from "../components/ui/card";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 const Feed = () => {
+  const [post, setPost] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      setLoading(true);
+      try {
+        const res = axios.get("http://localhost:3000/api/v1/getAllPosts");
+        const data = res.json();
+        console.log(data);
+      } catch (error) {
+        console.log(error, "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPost();
+  }, []);
+
   const posts = [
     {
       id: 1,
