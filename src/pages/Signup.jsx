@@ -1,7 +1,7 @@
-"use client";
 import React, { useState } from "react";
 import { useSignUp } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import { useForm } from "react-hook-form";
 import {
   Form,
@@ -13,12 +13,11 @@ import {
 } from "../components/ui/form";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
-import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
 
 export default function SignUp() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const navigate = useNavigate();
+  const { getToken } = useAuth();
 
   const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState("");
@@ -33,12 +32,11 @@ export default function SignUp() {
     },
   });
 
+  // Step 1: Handle sign-up
   const onSubmit = async (values) => {
     if (!isLoaded) return;
-
     setError("");
 
-    // Simple client-side password match validation
     if (values.password !== values.confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -51,6 +49,7 @@ export default function SignUp() {
         password: values.password,
       });
 
+      // Prepare verification
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setPendingVerification(true);
     } catch (err) {
@@ -59,6 +58,7 @@ export default function SignUp() {
     }
   };
 
+  // Step 2: Verify email
   const onVerify = async () => {
     if (!isLoaded) return;
 
@@ -66,10 +66,15 @@ export default function SignUp() {
       const attempt = await signUp.attemptEmailAddressVerification({ code });
 
       if (attempt.status === "complete") {
-        await setActive({
-          session: attempt.createdSessionId,
-          navigate: async () => navigate("/"),
-        });
+        await setActive({ session: attempt.createdSessionId });
+
+        // ✅ Get token from Clerk after session is active
+        const token = await getToken();
+        if (token) {
+          localStorage.setItem("token", token);
+        }
+
+        navigate("/");
       }
     } catch (err) {
       console.error(err);
@@ -78,9 +83,9 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen dark w-full flex items-center mx-auto justify-center bg-black ">
-      <div className="w-full max-w-md bg-[#0f172a] p-8 rounded-xl shadow-md">
-        <h2 className="text-2xl font-semibold text-center text-gray-800 dark:text-white mb-6">
+    <div className="min-h-screen w-full mx-auto flex items-center justify-center bg-black">
+      <div className="w-full max-w-md bg-[#0f172a] p-8 rounded-xl shadow-md border border-[#137C9E]">
+        <h2 className="text-3xl font-semibold text-[#E0F7FA] mb-8 text-center tracking-tight">
           {pendingVerification ? "Verify Your Email" : "Create an Account"}
         </h2>
 
@@ -91,100 +96,111 @@ export default function SignUp() {
         )}
 
         {!pendingVerification ? (
-          <>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-[#B2EBF2] mb-2">
+                      Username
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        className="w-full bg-[#195D6E] border border-[#29B6F6] text-[#E0F7FA] rounded-md px-4 py-3 placeholder-[#81D4FA] focus:outline-none focus:ring-4 focus:ring-[#29B6F6]/60 focus:border-[#29B6F6]"
+                        placeholder="your_username"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                rules={{ required: "Email is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-[#B2EBF2] mb-2">
+                      Email
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        className="w-full bg-[#195D6E] border border-[#29B6F6] text-[#E0F7FA] rounded-md px-4 py-3 placeholder-[#81D4FA] focus:outline-none focus:ring-4 focus:ring-[#29B6F6]/60 focus:border-[#29B6F6]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password"
+                rules={{ required: "Password is required", minLength: 6 }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-[#B2EBF2] mb-2">
+                      Password
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        className="w-full bg-[#195D6E] border border-[#29B6F6] text-[#E0F7FA] rounded-md px-4 py-3 placeholder-[#81D4FA] focus:outline-none focus:ring-4 focus:ring-[#29B6F6]/60 focus:border-[#29B6F6]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                rules={{ required: "Please confirm your password" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-[#B2EBF2] mb-2">
+                      Confirm Password
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        className="w-full bg-[#195D6E] border border-[#29B6F6] text-[#E0F7FA] rounded-md px-4 py-3 placeholder-[#81D4FA] focus:outline-none focus:ring-4 focus:ring-[#29B6F6]/60 focus:border-[#29B6F6]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div>
+                <p className="text-center text-gray-400">
+                  Already have an account?{" "}
+                  <a href="/login" className="text-blue-500 hover:underline">
+                    just login
+                  </a>
+                </p>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#00B8D4] to-[#00838F] text-white py-3 rounded-md shadow-md hover:from-[#00ACC1] hover:to-[#006064] transition"
               >
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <Input placeholder="your_username" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  rules={{ required: "Email is required" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="you@example.com"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  rules={{ required: "Password is required", minLength: 6 }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="••••••••"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  rules={{ required: "Please confirm your password" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="••••••••"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div>
-                  <p className="text-center">
-                    Already have an account?
-                    <a
-                      className="text-blue-500 text-right hover:underline"
-                      href="/login"
-                    >
-                      {" "}
-                      just login
-                    </a>
-                  </p>
-                </div>
-                <Button type="submit" className="w-full">
-                  Continue
-                </Button>
-              </form>
-            </Form>
-          </>
+                Continue
+              </Button>
+            </form>
+          </Form>
         ) : (
           <div className="space-y-4">
             <Input

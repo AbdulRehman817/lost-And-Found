@@ -1,132 +1,249 @@
-import React, { useState } from "react";
-import { UploadCloud } from "lucide-react";
-import axios from "axios";
+import { useState } from "react";
+import { Header } from "../components/Header";
+import { Footer } from "../components/footer";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
+import { cn } from "../lib/utils";
+import {
+  Calendar as CalendarIcon,
+  Upload,
+  Sparkles,
+  CheckCircle,
+  Loader2,
+  Tag as TagIcon,
+} from "lucide-react";
 
-export default function CreatePost() {
+import { useNavigate } from "react-router-dom";
+
+export default function SubmitPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
-  const [imageUrl, setImageUrl] = useState(null);
+  const [type, setType] = useState("");
+  const { getToken } = useAuth();
+  const navigate = useNavigate();
 
+  const [imageFile, setImageFile] = useState(null);
+  // const [suggestedTags, setSuggestedTags] = useState([]);
+  const [activeTags, setActiveTags] = useState([]);
+  // const [isAnalyzing, setIsAnalyzing] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("category", category);
-    formData.append("location", location);
-    formData.append("image", imageUrl);
-
     try {
-      const res = await axios.post(
-        "http://localhost:3000/api/v1/createPost",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-      const data = res.json();
+      // ✅ get token inside event handler
+      const token = await getToken();
+
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("category", category);
+      formData.append("location", location);
+      formData.append("image", imageFile);
+      formData.append("type", type);
+      formData.append("tags", activeTags.join(","));
+
+      const response = await fetch("http://localhost:3000/api/v1/createPost", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ correct placement
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Something went wrong");
+      }
+
       console.log("✅ Success:", data);
+      navigate("/");
+      // Reset form after successful post
+      setTitle("");
+      setDescription("");
+      setCategory("");
+      setLocation("");
+      setImageUrl(null);
+      setType("");
+      setActiveTags("");
     } catch (err) {
       console.error("❌ Failed:", err);
     }
   };
 
-  const handleClear = () => {
-    setTitle("");
-    setDescription("");
-    setCategory("");
-    setLocation("");
-    setImageUrl(null);
-  };
-
   return (
-    <div className="min-h-screen w-full bg-[#0f172a] text-white flex justify-center items-start pt-10 px-4 sm:px-6">
-      {/* Main Form Container */}
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-xl sm:max-w-2xl bg-[#111827] p-6 sm:p-8 rounded-xl shadow-xl border border-[#1f2937] flex flex-col gap-6"
-      >
-        {/* Heading */}
-        <div className="pb-4 border-b border-[#1e293b]">
-          <h1 className="text-2xl sm:text-3xl font-bold">Create New Post</h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Share something you lost or found with the community.
-          </p>
+    <div className="flex min-h-screen flex-col bg-muted/20">
+      <Header />
+      <main className="flex-1">
+        <div className="container mx-auto px-4 py-8 md:px-6 lg:py-12">
+          <Card className="max-w-3xl mx-auto">
+            <CardHeader className="text-center">
+              <CardTitle className="font-headline text-3xl sm:text-4xl">
+                Report an Item
+              </CardTitle>
+              <CardDescription className="text-lg">
+                Fill out the form below to post a lost or found item.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-8" onSubmit={handleSubmit}>
+                <div className="space-y-4">
+                  <Label className="font-semibold text-base">
+                    Is this item Lost or Found?
+                  </Label>
+                  <RadioGroup
+                    className="flex gap-4"
+                    onValueChange={(val) => setType(val)}
+                    value={type}
+                  >
+                    <Label
+                      htmlFor="lost"
+                      className="flex items-center space-x-2 border rounded-md p-4 flex-1 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5 cursor-pointer transition-colors"
+                    >
+                      <RadioGroupItem value="lost" id="lost" />
+                      <span>I lost something</span>
+                    </Label>
+                    <Label
+                      htmlFor="found"
+                      className="flex items-center space-x-2 border rounded-md p-4 flex-1 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5 cursor-pointer transition-colors"
+                    >
+                      <RadioGroupItem value="found" id="found" />
+                      <span>I found something</span>
+                    </Label>
+                  </RadioGroup>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="title" className="font-semibold">
+                      Item Title
+                    </Label>
+                    <Input
+                      id="title"
+                      placeholder="e.g., Black Leather Wallet"
+                      required
+                      onChange={(e) => setTitle(e.target.value)}
+                      value={title}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="category" className="font-semibold">
+                      Category
+                    </Label>
+                    <Select required>
+                      <SelectTrigger
+                        id="category"
+                        onChange={(e) => setCategory(e.target.value)}
+                        value={category}
+                      >
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="electronics">Electronics</SelectItem>
+                        <SelectItem value="pets">Pets</SelectItem>
+                        <SelectItem value="personal">Personal Items</SelectItem>
+                        <SelectItem value="accessories">Accessories</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="font-semibold">
+                    Description
+                  </Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Provide details like brand, color, size, and any identifying features."
+                    required
+                    className="min-h-[120px]"
+                    onChange={(e) => setDescription(e.target.value)}
+                    value={description}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="font-semibold">
+                      Location
+                    </Label>
+                    <Input
+                      id="location"
+                      placeholder="e.g., Central Park, near the fountain"
+                      required
+                      onChange={(e) => setLocation(e.target.value)}
+                      value={location}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="font-semibold text-base">
+                    Upload an Image
+                  </Label>
+                  <div className="flex items-center justify-center w-full">
+                    <label
+                      htmlFor="dropzone-file"
+                      className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted transition-colors"
+                    >
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-8 h-8 mb-4 text-muted-foreground" />
+                        <p className="mb-2 text-sm text-muted-foreground">
+                          <span className="font-semibold">Click to upload</span>{" "}
+                          or drag and drop
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          PNG, JPG, or GIF
+                        </p>
+                      </div>
+                      <Input
+                        id="dropzone-file"
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => setImageFile(e.target.files[0])}
+                        value={imageFile}
+                      />
+                    </label>
+                  </div>
+                </div>
+                <CardFooter className="p-0 pt-4">
+                  <Button type="submit" size="lg" className="w-full">
+                    Submit Item
+                  </Button>
+                </CardFooter>
+              </form>
+            </CardContent>
+          </Card>
         </div>
-
-        {/* Avatar + Title */}
-        <div className="flex items-start gap-4">
-          <img
-            src="https://api.dicebear.com/7.x/thumbs/svg?seed=user"
-            alt="Avatar"
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-[#1e293b]"
-          />
-          <textarea
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="What’s the item you've lost or found?"
-            className="flex-1 bg-[#1f2937] text-gray-200 placeholder-gray-500 p-3 rounded-lg min-h-[80px] sm:min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Description */}
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Add more details or context..."
-          className="w-full bg-[#1f2937] text-gray-200 placeholder-gray-500 p-3 rounded-lg min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-
-        {/* Category & Location */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <input
-            type="text"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            placeholder="Category (e.g. Wallet, Phone, Pet)"
-            className="bg-[#1f2937] text-gray-200 placeholder-gray-500 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Location (e.g. Area, City)"
-            className="bg-[#1f2937] text-gray-200 placeholder-gray-500 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Image Upload */}
-        <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-[#374151] rounded-lg cursor-pointer bg-[#1f2937] hover:bg-[#2c3340] transition-all">
-          <UploadCloud className="w-6 h-6 text-gray-400 mb-2" />
-          <span className="text-sm text-gray-400">
-            {imageUrl ? imageUrl.name : "Click or drag image here"}
-          </span>
-          <input
-            type="file"
-            className="hidden"
-            onChange={(e) => setImageUrl(e.target.files[0])}
-          />
-        </label>
-
-        {/* Buttons */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-[#1e293b]">
-          <button
-            type="button"
-            onClick={handleClear}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
-          >
-            Clear
-          </button>
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold shadow"
-          >
-            Post
-          </button>
-        </div>
-      </form>
+      </main>
+      <Footer />
     </div>
   );
 }

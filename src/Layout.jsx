@@ -8,11 +8,13 @@ import Home from "./pages/Home";
 import Feed from "./pages/Feed";
 import PostDetails from "./pages/PostDetails";
 import CreatePost from "./pages/CreatePost";
-import Profile from "./pages/Profile";
+
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import AboutPage from "./pages/About";
+import "./index.css";
 
 export default function Layout() {
   return (
@@ -34,6 +36,7 @@ export default function Layout() {
             }
           />
           <Route path="/post/:id" element={<PostDetails />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route
             path="/create"
             element={
@@ -42,14 +45,14 @@ export default function Layout() {
               </AuthGuard>
             }
           />
-          <Route
+          {/* <Route
             path="/profile"
             element={
               <AuthGuard>
                 <Profile />
               </AuthGuard>
             }
-          />
+          /> */}
 
           <Route
             path="/settings"
