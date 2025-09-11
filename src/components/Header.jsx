@@ -115,7 +115,7 @@ export function Header() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/chat/1" className="flex items-start gap-3">
+                <Link to="/chat/1" className="flex items-start gap-3">
                   <Avatar className="h-9 w-9">
                     <AvatarImage
                       src="https://picsum.photos/seed/15/100"
@@ -134,7 +134,7 @@ export function Header() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href="/profile?tab=requests"
+                  to="/profile?tab=requests"
                   className="flex items-start gap-3"
                 >
                   <Avatar className="h-9 w-9">
@@ -180,7 +180,7 @@ export function Header() {
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/profile">
+                <Link to="/profile">
                   <LayoutDashboard className="mr-2 h-4 w-4" />
                   <span>Dashboard</span>
                 </Link>
@@ -200,13 +200,13 @@ export function Header() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/messages" className="flex items-center">
+                <Link to="/messages" className="flex items-center">
                   <MessageSquare className="mr-2 h-4 w-4" />
                   <span>Messages</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/profile?tab=profile">
+                <Link to="/profile?tab=profile">
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </Link>
@@ -236,29 +236,29 @@ export function Header() {
             <SheetContent side="right">
               <nav className="grid gap-6 text-lg font-medium mt-8">
                 <Link
-                  href="/"
+                  to="/"
                   className="flex items-center gap-2 text-lg font-semibold"
                 >
                   <ReuniteLogo className="h-8 w-8 text-primary" />
                   <span className="sr-only">Reunite</span>
                 </Link>
-                <Link href="/" className="hover:text-primary">
+                <Link to="/" className="hover:text-primary">
                   Home
                 </Link>
                 <Link
-                  href="/feed"
+                  to="/feed"
                   className="text-muted-foreground hover:text-primary"
                 >
                   Lost & Found Feed
                 </Link>
                 <Link
-                  href="/about"
+                  to="/about"
                   className="text-muted-foreground hover:text-primary"
                 >
                   About
                 </Link>
                 <Button asChild>
-                  <Link href="/submit">Report an Item</Link>
+                  <Link to="/create">Report an Item</Link>
                 </Button>
               </nav>
             </SheetContent>

@@ -8,7 +8,7 @@ import Home from "./pages/Home";
 import Feed from "./pages/Feed";
 import PostDetails from "./pages/PostDetails";
 import CreatePost from "./pages/CreatePost";
-
+import ProfilePage from "./pages/Profile";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Settings from "./pages/Settings";
@@ -32,6 +32,14 @@ export default function Layout() {
             element={
               <AuthGuard>
                 <Feed />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <AuthGuard>
+                <ProfilePage />
               </AuthGuard>
             }
           />
