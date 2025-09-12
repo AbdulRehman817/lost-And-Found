@@ -43,7 +43,7 @@ export default function Layout() {
               </AuthGuard>
             }
           />
-          <Route path="/post/:id" element={<PostDetails />} />
+          <Route path="/feed/:id" element={<PostDetails />} />
           <Route path="/about" element={<AboutPage />} />
           <Route
             path="/create"

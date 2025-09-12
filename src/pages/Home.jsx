@@ -93,11 +93,15 @@ export default function Home() {
               </p>
               <div className="w-full max-w-xl space-y-4 pt-6">
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
-                  <Button asChild size="lg" className="bg-[#3b82f6]">
-                    <Link href="/feed">Browse Lost & Found</Link>
+                  <Button
+                    asChild
+                    size="lg"
+                    className="bg-[#3b82f6] hover:bg-[#3b82f6]/90"
+                  >
+                    <Link to="/feed">Browse Lost & Found</Link>
                   </Button>
                   <Button variant="secondary" asChild size="lg">
-                    <Link href="/create">
+                    <Link to="/create">
                       <PlusCircle className="mr-2 h-4 w-4" />
                       Report an Item
                     </Link>

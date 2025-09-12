@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "@clerk/clerk-react";
 export default function SubmitPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -87,20 +87,20 @@ export default function SubmitPage() {
       setDescription("");
       setCategory("");
       setLocation("");
-      setImageUrl(null);
+      setImageFile(null);
       setType("");
-      setActiveTags("");
+      setActiveTags([]);
     } catch (err) {
       console.error("❌ Failed:", err);
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted/20">
+    <div className="flex min-h-screen flex-col bg-muted">
       <Header />
-      <main className="flex-1">
-        <div className="container mx-auto px-4 py-8 md:px-6 lg:py-12">
-          <Card className="max-w-3xl mx-auto">
+      <main className="flex-1 ">
+        <div className="container mx-auto px-4 py-8 md:px-6 lg:py-12 ">
+          <Card className="max-w-3xl mx-auto bg-background/80">
             <CardHeader className="text-center">
               <CardTitle className="font-headline text-3xl sm:text-4xl">
                 Report an Item
@@ -155,12 +155,12 @@ export default function SubmitPage() {
                     <Label htmlFor="category" className="font-semibold">
                       Category
                     </Label>
-                    <Select required>
-                      <SelectTrigger
-                        id="category"
-                        onChange={(e) => setCategory(e.target.value)}
-                        value={category}
-                      >
+                    <Select
+                      required
+                      value={category}
+                      onValueChange={(val) => setCategory(val)}
+                    >
+                      <SelectTrigger id="category">
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -188,7 +188,22 @@ export default function SubmitPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="">
+                  <div className="space-y-2">
+                    <Label htmlFor="tags" className="font-semibold">
+                      Tags
+                    </Label>
+                    <Input
+                      id="tags"
+                      placeholder="e.g., Central Park, near the fountain"
+                      required
+                      onChange={(e) => setActiveTags(e.target.value.split(","))}
+                      value={activeTags.join(",")}
+                    />
+                  </div>
+                </div>
+
+                <div className="">
                   <div className="space-y-2">
                     <Label htmlFor="location" className="font-semibold">
                       Location
@@ -207,18 +222,19 @@ export default function SubmitPage() {
                   <Label className="font-semibold text-base">
                     Upload an Image
                   </Label>
-                  <div className="flex items-center justify-center w-full">
+
+                  <div className="flex flex-col items-center justify-center w-full">
                     <label
                       htmlFor="dropzone-file"
                       className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted transition-colors"
                     >
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <Upload className="w-8 h-8 mb-4 text-muted-foreground" />
-                        <p className="mb-2 text-sm text-muted-foreground">
+                        <p className="mb-2 text-sm text-muted-foreground text-center">
                           <span className="font-semibold">Click to upload</span>{" "}
                           or drag and drop
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground text-center">
                           PNG, JPG, or GIF
                         </p>
                       </div>
@@ -228,11 +244,22 @@ export default function SubmitPage() {
                         className="hidden"
                         accept="image/*"
                         onChange={(e) => setImageFile(e.target.files[0])}
-                        value={imageFile}
                       />
                     </label>
+
+                    {/* Image Preview */}
+                    {imageFile && (
+                      <div className="mt-4 w-full flex justify-center">
+                        <img
+                          src={URL.createObjectURL(imageFile)}
+                          alt="Preview"
+                          className="max-h-64 rounded-lg object-contain border"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
+
                 <CardFooter className="p-0 pt-4">
                   <Button type="submit" size="lg" className="w-full">
                     Submit Item
