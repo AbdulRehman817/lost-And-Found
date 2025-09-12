@@ -35,7 +35,7 @@ import { Label } from "../components/ui/label";
 import { Link, useParams } from "react-router-dom";
 
 export default function PostDetails() {
-  const { _id } = useParams();
+  const { id } = useParams();
   const [post, setPost] = React.useState(null);
   const [comments, setComments] = React.useState([]);
   const [newComment, setNewComment] = React.useState("");
@@ -47,12 +47,12 @@ export default function PostDetails() {
   const [requestSent, setRequestSent] = React.useState(false);
 
   React.useEffect(() => {
-    if (!_id) return;
+    if (!id) return;
 
     const fetchPost = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3000/api/v1/feed/${_id}`
+          `http://localhost:3000/api/v1/feed/${id}`
         );
         console.log(response);
         const data = response.data.data;
@@ -69,10 +69,10 @@ export default function PostDetails() {
           category: data?.category,
           tags: data?.tags || [],
           poster: {
-            name: data?.user?.name || "Anonymous",
-            avatar: data?.user?.avatar || "https://picsum.photos/seed/10/200",
-            email: data?.user?.email || "",
-            phone: data?.user?.phone || "",
+            name: data?.userId?.name || "Anonymous",
+            avatar: data?.userId?.avatar || "https://picsum.photos/seed/10/200",
+            email: data?.userId?.email || "",
+            phone: data?.userId?.phone || "",
           },
           comments: data?.comments || [],
           likes: data?.likes || 0,
@@ -86,7 +86,7 @@ export default function PostDetails() {
     };
 
     fetchPost();
-  }, [_id]);
+  }, [id]);
 
   if (!post) return <p className="text-center py-12">Loading item...</p>;
 
@@ -193,11 +193,14 @@ export default function PostDetails() {
                   <div className="flex items-center gap-4">
                     <Avatar className="w-12 h-12">
                       <AvatarImage
-                        src={post.poster.avatar}
-                        alt={post.poster.name}
+                        src={post.poster.avatar} // use actual avatar URL
+                        alt={post.poster.name
+                          .replace(/\d+/g, "")
+                          .replace(/[_\s]+$/, "")}
                       />
                       <AvatarFallback>
-                        {post.poster.name.charAt(0)}
+                        {post.poster.name.charAt(0)} // fallback to first letter
+                        of name
                       </AvatarFallback>
                     </Avatar>
                     <div>

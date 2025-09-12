@@ -1,185 +1,3 @@
-// import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-// import { Card, CardContent } from "../components/ui/card";
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-
-// // 🕒 Utility: Format time
-
-// const Feed = () => {
-//
-
-//   // Like
-//   const handleLike = (postId) => {
-//     setPost((prev) =>
-//       prev.map((p) => (p._id === postId ? { ...p, liked: !p.liked } : p))
-//     );
-//   };
-
-//   // Toggle Comments
-//   const toggleComments = (postId) => {
-//     setOpenComments((prev) => ({
-//       ...prev,
-//       [postId]: !prev[postId],
-//     }));
-//   };
-
-//   // Handle Comment Submit
-//   const handleCommentSubmit = (postId) => {
-//     if (!commentText[postId]?.trim()) return;
-
-//     setPost((prev) =>
-//       prev.map((p) =>
-//         p._id === postId
-//           ? {
-//               ...p,
-//               comments: [
-//                 ...(p.comments || []),
-//                 { userName: "You", text: commentText[postId] },
-//               ],
-//               commentCount: (p.commentCount || 0) + 1,
-//             }
-//           : p
-//       )
-//     );
-
-//     // Clear input
-//     setCommentText((prev) => ({ ...prev, [postId]: "" }));
-
-//     // 👉 Optional: Send to backend here
-//     // axios.post(`/api/v1/posts/${postId}/comment`, { text: commentText[postId] });
-//   };
-
-//   return (
-//     <main className="flex-1 max-w-2xl border-r border-zinc-800">
-//       {/* Sticky Header */}
-//       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 py-3">
-//         <h2 className="text-xl font-bold">Home</h2>
-//       </div>
-
-//       {/* Posts */}
-//       <div className="divide-y divide-zinc-800">
-//         {posts.map((post) => (
-//           <div className="flex gap-3 p-4" key={post._id}>
-//             {/* Avatar */}
-//             <Avatar>
-//               <AvatarImage src={post.userId?.profileImage} />
-//               <AvatarFallback>
-//                 {post.userId?.name?.charAt(0).toUpperCase() || "U"}
-//               </AvatarFallback>
-//             </Avatar>
-
-//             {/* Post Content */}
-//             <div className="flex-1">
-//               <div className="flex items-center gap-2">
-//                 <span className="font-semibold">{post.userId?.name}</span>
-//                 <span className="text-muted-foreground text-xs">
-//                   • {formatTime(post.createdAt)}
-//                 </span>
-//               </div>
-
-//               <p className="mt-2">{post.description}</p>
-
-//               {post.imageUrl && (
-//                 <Card className="mt-3 overflow-hidden rounded-2xl border-zinc-800">
-//                   <CardContent className="p-0">
-//                     <img
-//                       src={post.imageUrl}
-//                       alt="post"
-//                       className="w-full h-auto"
-//                     />
-//                   </CardContent>
-//                 </Card>
-//               )}
-
-//               {/* Actions */}
-//               <div className="flex items-center gap-6 mt-3 text-sm text-zinc-400">
-//                 <button
-//                   onClick={() => toggleComments(post._id)}
-//                   className="hover:text-blue-400"
-//                 >
-//                   💬 {post.commentCount || 0}
-//                 </button>
-//                 <button
-//                   onClick={() => handleLike(post._id)}
-//                   className={`hover:text-red-400 ${
-//                     post.liked ? "text-red-500" : ""
-//                   }`}
-//                 >
-//                   ❤️ {post.likeCount || 0}
-//                 </button>
-//               </div>
-
-//               {/* Comments */}
-//               {openComments[post._id] && (
-//                 <div className="mt-3 space-y-2 text-sm">
-//                   {post.comments?.length ? (
-//                     post.comments.map((c, idx) => (
-//                       <div
-//                         key={idx}
-//                         className="border-b border-zinc-800 pb-1 text-zinc-300"
-//                       >
-//                         <span className="font-semibold">{c.userName}: </span>
-//                         {c.text}
-//                       </div>
-//                     ))
-//                   ) : (
-//                     <p className="text-zinc-500">No comments yet.</p>
-//                   )}
-
-//                   {/* Write a Comment */}
-//                   <div className="flex gap-2 mt-2">
-//                     <input
-//                       type="text"
-//                       value={commentText[post._id] || ""}
-//                       onChange={(e) =>
-//                         setCommentText((prev) => ({
-//                           ...prev,
-//                           [post._id]: e.target.value,
-//                         }))
-//                       }
-//                       onKeyDown={(e) =>
-//                         e.key === "Enter" && handleCommentSubmit(post._id)
-//                       }
-//                       placeholder="Write a comment..."
-//                       className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1 text-sm text-white"
-//                     />
-//                     <button
-//                       onClick={() => handleCommentSubmit(post._id)}
-//                       className="text-blue-400 text-sm"
-//                     >
-//                       Send
-//                     </button>
-//                   </div>
-
-//                   <button
-//                     onClick={() => toggleComments(post._id)}
-//                     className="text-xs text-blue-400 hover:underline mt-1"
-//                   >
-//                     Hide comments
-//                   </button>
-//                 </div>
-//               )}
-
-//               {!openComments[post._id] && post.commentCount > 0 && (
-//                 <button
-//                   onClick={() => toggleComments(post._id)}
-//                   className="text-xs text-blue-400 hover:underline mt-2"
-//                 >
-//                   View all comments
-//                 </button>
-//               )}
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-//     </main>
-//   );
-// };
-
-// export default Feed;
-
-"use client";
-
 import * as React from "react";
 
 import { Header } from "../components/Header";
@@ -380,6 +198,9 @@ export default function Feed() {
   const [openComments, setOpenComments] = useState({});
   const [commentText, setCommentText] = useState({}); // track input text
 
+  const handleProductClick = (id) => {
+    navigate(`/feed/${id}`);
+  };
   useEffect(() => {
     const fetchPost = async () => {
       setLoading(true);
@@ -456,13 +277,17 @@ export default function Feed() {
             {view === "list" ? (
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {posts.map((item) => (
-                  <ItemCard key={item.id} {...item} />
+                  <ItemCard
+                    key={item._id}
+                    {...item}
+                    // onClick={() => handleProductClick(item._id)}
+                  />
                 ))}
               </div>
             ) : (
               <Card className="h-[600px] w-full overflow-hidden rounded-xl">
                 <div className="relative h-full w-full bg-muted">
-                  <Image
+                  <img
                     src="https://picsum.photos/seed/99/1200/600"
                     alt="Map of items"
                     fill

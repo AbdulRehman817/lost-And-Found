@@ -15,7 +15,6 @@ const formatDate = (dateString) => {
 };
 
 export function ItemCard({
-  id,
   _id,
   title,
   status,
