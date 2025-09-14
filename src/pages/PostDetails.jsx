@@ -19,13 +19,99 @@ import {
 import { cn } from "../lib/utils";
 import { Link, useParams } from "react-router-dom";
 import CommentBox from "../components/CommentBox";
+import { useAuth } from "@clerk/clerk-react";
 
 export default function PostDetails() {
   const { id } = useParams();
   const [post, setPost] = React.useState(null);
-
+  const { getToken } = useAuth();
   const [likes, setLikes] = React.useState(0);
   const [isLiked, setIsLiked] = React.useState(false);
+  const [isLiking, setIsLiking] = React.useState(false);
+
+  // Function to fetch like status and count
+  const fetchLikeData = async () => {
+    try {
+      const token = await getToken();
+
+      // Get total likes for the post
+      const likesResponse = await axios.get(
+        `http://localhost:3000/api/v1/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (likesResponse.data.success) {
+        setLikes(likesResponse.data.count || 0);
+      }
+
+      // Check if current user has liked the post
+      const userLikeResponse = await axios.get(
+        `http://localhost:3000/api/v1/user/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (userLikeResponse.data.success) {
+        setIsLiked(userLikeResponse.data.isLiked || false);
+      }
+    } catch (error) {
+      console.log("Error fetching like data:", error);
+    }
+  };
+
+  const handleLike = async () => {
+    if (isLiking) return; // Prevent multiple rapid clicks
+
+    setIsLiking(true);
+    const token = await getToken();
+
+    try {
+      if (isLiked) {
+        // Unlike the post
+        const response = await axios.delete(
+          `http://localhost:3000/api/v1/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success || response.status === 200) {
+          setIsLiked(false);
+          setLikes((prev) => Math.max(0, prev - 1));
+        }
+      } else {
+        // Like the post
+        const response = await axios.post(
+          `http://localhost:3000/api/v1/${id}`,
+          {}, // Empty body, postId comes from URL params
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setIsLiked(true);
+          setLikes((prev) => prev + 1);
+        }
+      }
+    } catch (error) {
+      console.log("Error handling like:", error);
+      // Optionally show error message to user
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   React.useEffect(() => {
     if (!id) return;
@@ -53,24 +139,20 @@ export default function PostDetails() {
             email: data?.userId?.email || "",
             phone: data?.userId?.phone || "",
           },
-          likes: data?.likes || 0,
         });
 
-        setLikes(data?.likes || 0);
+        // Set initial like count from post data
+        setLikes(data?.likeCount || 0);
       } catch (error) {
         console.error("Error fetching post:", error);
       }
     };
 
     fetchPost();
+    fetchLikeData(); // Fetch like data when component mounts
   }, [id]);
 
   if (!post) return <p className="text-center py-12">Loading item...</p>;
-
-  const handleLike = () => {
-    setLikes(isLiked ? likes - 1 : likes + 1);
-    setIsLiked(!isLiked);
-  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -190,15 +272,14 @@ export default function PostDetails() {
                     {(Array.isArray(post.tags)
                       ? post.tags.join(",").split(",")
                       : post.tags.split(",")
-                    ) // or just split if it's a plain string
-                      .map((tag) => (
-                        <span
-                          key={tag}
-                          className="bg-[#1e293b] text-white text-sm px-3 py-1 rounded-full"
-                        >
-                          {tag.trim()}{" "}
-                        </span>
-                      ))}
+                    ).map((tag, index) => (
+                      <span
+                        key={`${tag}-${index}`}
+                        className="bg-[#1e293b] text-white text-sm px-3 py-1 rounded-full"
+                      >
+                        {tag.trim()}
+                      </span>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -214,22 +295,25 @@ export default function PostDetails() {
 
                   <Separator className="my-6" />
 
-                  {/* ✅ Add Comment */}
+                  {/* Like Button */}
                   <div className="flex gap-4">
                     <div className="flex justify-between items-center">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={handleLike}
-                        className="flex items-center gap-2 text-muted-foreground"
+                        disabled={isLiking}
+                        className="flex items-center gap-2 text-muted-foreground hover:text-red-500"
                       >
                         <Heart
                           className={cn(
                             "h-4 w-4",
-                            isLiked ? "text-red-500 fill-current" : ""
+                            isLiked ? "text-red-500 fill-current" : "",
+                            isLiking ? "opacity-50" : ""
                           )}
                         />
                         <span>{likes}</span>
+                        {isLiking && <span className="text-xs">...</span>}
                       </Button>
                     </div>
                   </div>
