@@ -33,6 +33,7 @@ export function Header() {
   const [notificationCount, setNotificationCount] = React.useState(2);
 
   const { isSignedIn, user } = useUser();
+
   const { signOut } = useClerk();
   const navigate = useNavigate();
   useEffect(() => {
@@ -42,8 +43,13 @@ export function Header() {
     }
   }, [isSignedIn, navigate]);
 
-  const handleLogout = () => {
-    signOut();
+  const handleLogout = async () => {
+    try {
+      await signOut(); // wait for Clerk to finish logging out
+      navigate("/login");
+    } catch (err) {
+      console.error("Error during logout:", err);
+    }
   };
 
   return (
@@ -212,11 +218,8 @@ export function Header() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <LogOut
-                  onClick={() => handleLogout()}
-                  className="mr-2 h-4 w-4"
-                />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

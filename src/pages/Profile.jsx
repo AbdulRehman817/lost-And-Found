@@ -34,9 +34,11 @@ import {
   Bell,
   CheckCircle,
 } from "lucide-react";
+import { useState } from "react";
 import * as React from "react";
 import RequestsList from "../components/request-list";
 import { useSearchParams } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 
 // ✅ Initial items fixed
 const initialUserItems = [
@@ -69,15 +71,6 @@ const initialUserItems = [
   },
 ];
 
-const userProfile = {
-  name: "John Doe",
-  location: "New York, USA",
-  bio: "Member since July 2024. Helping reunite lost items with their owners.",
-  avatar: "https://picsum.photos/seed/10/200",
-  email: "john.doe@example.com",
-  phone: "+1 234 567 890",
-};
-
 const userStats = {
   posts: 3,
   activeRequests: 2,
@@ -87,22 +80,28 @@ const userStats = {
 export default function ProfilePage() {
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("tab") || "dashboard";
+  const { isSignedIn, user } = useUser();
+  const [bio, setBio] = useState(user?.publicMetadata?.bio || "");
+  const [phone, setPhone] = useState(user?.publicMetadata?.phone || "");
 
   const [isEditing, setIsEditing] = React.useState(false);
-  const [profile, setProfile] = React.useState(userProfile);
+
   const [userItems, setUserItems] = React.useState(initialUserItems);
 
-  const handleProfileChange = () => {
-    const { name, value } = e.target;
-    setProfile((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSaveChanges = () => {
-    setIsEditing(false);
-    toast({
-      title: "Profile Updated",
-      description: "Your changes have been saved successfully.",
-    });
+  console.log(user.primaryEmailAddress.emailAddress);
+  console.log(user.username);
+  const handleProfileChange = async () => {
+    try {
+      await fetch("http://localhost:3000/api/v1/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bio, phone }),
+      });
+      alert("✅ Profile updated!");
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      alert("❌ Failed to update profile");
+    }
   };
 
   const handleMarkAsReunited = () => {
@@ -150,7 +149,7 @@ export default function ProfilePage() {
                 <Card className="bg-background">
                   <CardHeader>
                     <CardTitle className="font-headline text-3xl">
-                      Welcome back, {profile.name}!
+                      Welcome back, {user.username}!
                     </CardTitle>
                     <CardDescription>
                       Here's a summary of your activity on Reunite.
@@ -246,11 +245,11 @@ export default function ProfilePage() {
                       <div className="relative mb-4">
                         <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
                           <AvatarImage
-                            src={profile.avatar}
-                            alt={profile.name}
+                            src={user.imageUrl}
+                            alt={user.username}
                           />
                           <AvatarFallback>
-                            {profile.name.charAt(0)}
+                            {user?.username?.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                         {isEditing && (
@@ -269,28 +268,13 @@ export default function ProfilePage() {
                       {isEditing ? (
                         <Input
                           name="name"
-                          value={profile.name}
-                          onChange={handleProfileChange}
+                          value={user.username}
                           className="text-2xl font-bold font-headline text-center max-w-sm mx-auto"
                         />
                       ) : (
                         <h2 className="font-headline text-3xl font-bold">
-                          {profile.name}
+                          {user.username}
                         </h2>
-                      )}
-
-                      {isEditing ? (
-                        <Input
-                          name="location"
-                          value={profile.location}
-                          onChange={handleProfileChange}
-                          className="text-muted-foreground text-center max-w-sm mx-auto mt-1"
-                        />
-                      ) : (
-                        <p className="text-muted-foreground mt-1 flex items-center gap-2">
-                          <Globe className="h-4 w-4" />
-                          {profile.location}
-                        </p>
                       )}
                     </div>
 
@@ -305,8 +289,7 @@ export default function ProfilePage() {
                         <Input
                           id="email"
                           name="email"
-                          value={profile.email}
-                          onChange={handleProfileChange}
+                          value={user.primaryEmailAddress.emailAddress}
                           readOnly={!isEditing}
                         />
                       </div>
@@ -320,8 +303,8 @@ export default function ProfilePage() {
                         <Input
                           id="phone"
                           name="phone"
-                          value={profile.phone}
-                          onChange={handleProfileChange}
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
                           readOnly={!isEditing}
                         />
                       </div>
@@ -333,16 +316,15 @@ export default function ProfilePage() {
                       <Textarea
                         id="bio"
                         name="bio"
-                        value={profile.bio}
-                        onChange={handleProfileChange}
-                        readOnly={!isEditing}
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
                         className="min-h-[100px]"
                       />
                     </div>
 
                     {isEditing && (
                       <div className="flex justify-end">
-                        <Button onClick={handleSaveChanges}>
+                        <Button onClick={handleProfileChange}>
                           Save Changes
                         </Button>{" "}
                       </div>

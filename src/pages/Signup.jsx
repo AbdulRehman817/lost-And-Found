@@ -73,6 +73,12 @@ export default function SignUp() {
         if (token) {
           localStorage.setItem("token", token);
         }
+        const res = await fetch("http://localhost:3000/api/v1/profile", {
+          method: "GET", // just GET is enough, because syncClerkUser will create user if missing
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         navigate("/");
       }

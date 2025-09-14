@@ -14,37 +14,18 @@ import {
   Tag,
   MessageSquare,
   Heart,
-  Info,
-  Send,
-  Loader2,
-  MessageCircle,
   CheckCircle,
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
-import { Label } from "../components/ui/label";
 import { Link, useParams } from "react-router-dom";
+import CommentBox from "../components/CommentBox";
 
 export default function PostDetails() {
   const { id } = useParams();
   const [post, setPost] = React.useState(null);
-  const [comments, setComments] = React.useState([]);
-  const [newComment, setNewComment] = React.useState("");
+
   const [likes, setLikes] = React.useState(0);
   const [isLiked, setIsLiked] = React.useState(false);
-  const [requestMessage, setRequestMessage] = React.useState("");
-  const [isRequesting, setIsRequesting] = React.useState(false);
-  const [isRequestDialogOpen, setIsRequestDialogOpen] = React.useState(false);
-  const [requestSent, setRequestSent] = React.useState(false);
 
   React.useEffect(() => {
     if (!id) return;
@@ -54,9 +35,7 @@ export default function PostDetails() {
         const response = await axios.get(
           `http://localhost:3000/api/v1/feed/${id}`
         );
-        console.log(response);
         const data = response.data.data;
-        console.log(data);
 
         setPost({
           id: data?._id,
@@ -74,11 +53,9 @@ export default function PostDetails() {
             email: data?.userId?.email || "",
             phone: data?.userId?.phone || "",
           },
-          comments: data?.comments || [],
           likes: data?.likes || 0,
         });
 
-        setComments(data?.comments || []);
         setLikes(data?.likes || 0);
       } catch (error) {
         console.error("Error fetching post:", error);
@@ -93,18 +70,6 @@ export default function PostDetails() {
   const handleLike = () => {
     setLikes(isLiked ? likes - 1 : likes + 1);
     setIsLiked(!isLiked);
-  };
-
-  const handlePostComment = () => {
-    if (!newComment.trim()) return;
-    const comment = {
-      user: "You",
-      avatar: "https://picsum.photos/seed/user/100",
-      comment: newComment,
-      date: "Just now",
-    };
-    setComments([...comments, comment]);
-    setNewComment("");
   };
 
   return (
@@ -193,14 +158,11 @@ export default function PostDetails() {
                   <div className="flex items-center gap-4">
                     <Avatar className="w-12 h-12">
                       <AvatarImage
-                        src={post.poster.avatar} // use actual avatar URL
-                        alt={post.poster.name
-                          .replace(/\d+/g, "")
-                          .replace(/[_\s]+$/, "")}
+                        src={post.poster.avatar}
+                        alt={post.poster.name}
                       />
                       <AvatarFallback>
-                        {post.poster.name.charAt(0)} // fallback to first letter
-                        of name
+                        {post.poster.name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
@@ -216,7 +178,7 @@ export default function PostDetails() {
 
             {/* Description & Comments */}
             <div className="md:col-span-2 lg:col-span-3 space-y-8">
-              <Card>
+              <Card className="bg-background">
                 <CardContent className="p-6 space-y-4">
                   <h2 className="font-headline text-2xl font-bold">
                     Description
@@ -225,89 +187,50 @@ export default function PostDetails() {
                     {post.description}
                   </p>
                   <div className="flex flex-wrap gap-2 pt-2">
-                    {post.tags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="secondary"
-                        className="font-medium"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
+                    {(Array.isArray(post.tags)
+                      ? post.tags.join(",").split(",")
+                      : post.tags.split(",")
+                    ) // or just split if it's a plain string
+                      .map((tag) => (
+                        <span
+                          key={tag}
+                          className="bg-[#1e293b] text-white text-sm px-3 py-1 rounded-full"
+                        >
+                          {tag.trim()}{" "}
+                        </span>
+                      ))}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-background">
                 <CardContent className="p-6 space-y-6">
                   <h2 className="font-headline text-2xl font-bold flex items-center gap-3">
                     <MessageSquare className="h-6 w-6 text-primary" /> Community
                     Comments
                   </h2>
-                  <div className="space-y-6">
-                    {comments.map((comment, index) => (
-                      <div key={index} className="flex gap-4">
-                        <Avatar>
-                          <AvatarImage
-                            src={comment.avatar}
-                            alt={comment.user}
-                          />
-                          <AvatarFallback>
-                            {comment.user.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <p className="font-semibold text-foreground">
-                              {comment.user}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {comment.date}
-                            </p>
-                          </div>
-                          <p className="text-muted-foreground mt-1">
-                            {comment.comment}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+
+                  <CommentBox />
 
                   <Separator className="my-6" />
 
+                  {/* ✅ Add Comment */}
                   <div className="flex gap-4">
-                    <Avatar>
-                      <AvatarImage
-                        src="https://picsum.photos/seed/user/100"
-                        alt="Current User"
-                      />
-                      <AvatarFallback>U</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 space-y-2">
-                      <Textarea
-                        placeholder="Add a public comment..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                      />
-                      <div className="flex justify-between items-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleLike}
-                          className="flex items-center gap-2 text-muted-foreground"
-                        >
-                          <Heart
-                            className={cn(
-                              "h-4 w-4",
-                              isLiked ? "text-red-500 fill-current" : ""
-                            )}
-                          />
-                          <span>{likes}</span>
-                        </Button>
-                        <Button onClick={handlePostComment}>
-                          Post Comment
-                        </Button>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleLike}
+                        className="flex items-center gap-2 text-muted-foreground"
+                      >
+                        <Heart
+                          className={cn(
+                            "h-4 w-4",
+                            isLiked ? "text-red-500 fill-current" : ""
+                          )}
+                        />
+                        <span>{likes}</span>
+                      </Button>
                     </div>
                   </div>
                 </CardContent>

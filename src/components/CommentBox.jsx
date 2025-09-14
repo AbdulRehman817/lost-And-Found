@@ -1,41 +1,121 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import { useAuth, useUser } from "@clerk/clerk-react";
 
 export default function CommentBox() {
+  const { id } = useParams();
+  const { getToken } = useAuth();
+  const { isSignedIn, user } = useUser();
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+
+  const fetchComments = async () => {
+    try {
+      const token = await getToken();
+      const response = await axios.get(
+        `http://localhost:3000/api/v1/posts/${id}/comments`,
+        {
+          headers: {
+            //! my comments were not working because  i forgot to add authorization bearer token
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const comments = response.data.comments;
+      setComments(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  };
+
+  // 🔹 Add new comment
+  const handlePostComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      const token = await getToken();
+      const response = await axios.post(
+        `http://localhost:3000/api/v1/posts/${id}/comments`,
+        {
+          message: newComment,
+          parentId: null,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        const comment = response.data.data;
+        const normalizedComment = { ...comment, replies: [] };
+        setComments((prev) => [normalizedComment, ...prev]);
+        setNewComment("");
+      }
+    } catch (error) {
+      console.error("Error posting comment:", error.response?.data || error);
+    }
+  };
+
+  useEffect(() => {
+    fetchComments();
+  }, [id]);
+
   return (
-    <div className="mt-6 p-5 bg-[#1E1F24] rounded-2xl shadow-md border border-[#2c2e34]">
+    <div className="mt-6 p-5  rounded-2xl shadow-md border border-[#2c2e34] bg-background">
       <h4 className="font-semibold text-[#E5E7EB] mb-4 text-lg">Comments</h4>
 
-      {/* Example Comment */}
-      <div className="space-y-5 mb-6">
-        <div className="flex gap-3 items-start">
-          {/* Avatar */}
-          <div className="w-10 h-10 rounded-full bg-[#2b2d33] flex items-center justify-center text-white font-bold">
-            J
-          </div>
+      {/* 🔹 Comments List */}
+      <div className="space-y-6 mb-6 ">
+        {comments.length > 0 ? (
+          comments.map((comment) => (
+            <div key={comment._id} className="flex gap-4">
+              <Avatar>
+                <AvatarImage
+                  src={comment.userId?.profileImage || ""}
+                  alt={comment.userId?.name || "User"}
+                />
+                <AvatarFallback>
+                  {comment.userId?.name?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
 
-          {/* Comment Content */}
-          <div className="flex flex-col">
-            <p className="text-sm text-[#E5E7EB]">
-              <strong>John</strong>{" "}
-              <span className="text-xs text-[#9CA3AF]">• 1h ago</span>
-            </p>
-            <p className="text-sm text-[#D1D5DB] mt-1">
-              Hope you find it soon!
-            </p>
-          </div>
-        </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-foreground">
+                    {comment.userId?.name || "Unknown"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {comment.createdAt
+                      ? new Date(comment.createdAt).toLocaleDateString()
+                      : ""}
+                  </p>
+                </div>
+                <p className="text-muted-foreground mt-1">{comment.message}</p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No comments yet. Be the first!
+          </p>
+        )}
       </div>
 
-      {/* Add Comment */}
-      <div className="flex gap-3 items-center">
+      {/* 🔹 Add Comment */}
+      <div className="flex gap-3 bg-background">
         <Input
-          placeholder="Add a comment..."
-          className="flex-1 bg-[#2b2d33] border-none text-[#E5E7EB] placeholder-[#9CA3AF] rounded-xl focus:ring-2 focus:ring-[#3b82f6]"
+          placeholder="Write a comment..."
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
         />
-        <Button className="bg-[#3b82f6] hover:bg-[#2563eb] rounded-xl">
-          Send
+        <Button onClick={handlePostComment} className="bg-[#3b82f6]">
+          Post
         </Button>
       </div>
     </div>
