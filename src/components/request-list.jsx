@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { MessageSquare, ShieldCheck } from "lucide-react";
+import { useAuth } from "@clerk/clerk-react";
 // Dummy Requests
+
 const initialRequests = [
   {
     id: 1,
@@ -56,14 +58,30 @@ const initialRequests = [
 ];
 
 export default function RequestsList() {
-  const [requests, setRequests] = useState(initialRequests);
+  const [requests, setRequests] = useState([]);
   const navigate = useNavigate();
+  const { getToken } = useAuth();
+  const token = getToken();
 
   // Accept request
-  const handleAccept = (id) => {
-    setRequests((prev) =>
-      prev.map((req) => (req.id === id ? { ...req, status: "accepted" } : req))
-    );
+
+  const handleAccept = async (id) => {
+    try {
+      const token = await getToken();
+
+      const res = await axios.get(
+        "http://localhost:3000/api/v1/connections/getConnections",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setRequests(res.data); // assuming API returns an array
+    } catch (error) {
+      console.error("❌ Error fetching connections:", error);
+    }
   };
 
   // Navigate to chat

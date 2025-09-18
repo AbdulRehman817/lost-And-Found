@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Heart,
   CheckCircle,
+  PlusCircle,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Link, useParams } from "react-router-dom";
@@ -28,15 +29,17 @@ export default function PostDetails() {
   const [likes, setLikes] = React.useState(0);
   const [isLiked, setIsLiked] = React.useState(false);
   const [isLiking, setIsLiking] = React.useState(false);
+  const [connectionStatus, setConnectionStatus] = React.useState("");
+  const [isConnecting, setIsConnecting] = React.useState(false);
 
   // Function to fetch like status and count
   const fetchLikeData = async () => {
     try {
       const token = await getToken();
 
-      // Get total likes for the post
+      // Get total likes for the post - Fixed URL
       const likesResponse = await axios.get(
-        `http://localhost:3000/api/v1/${id}`,
+        `http://localhost:3000/api/v1/likes/${id}`, // Fixed: Added 'likes' to the path
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -48,9 +51,9 @@ export default function PostDetails() {
         setLikes(likesResponse.data.count || 0);
       }
 
-      // Check if current user has liked the post
+      // Check if current user has liked the post - Fixed URL
       const userLikeResponse = await axios.get(
-        `http://localhost:3000/api/v1/user/${id}`,
+        `http://localhost:3000/api/v1/likes/user/${id}`, // Fixed: Added 'likes' to the path
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -74,9 +77,9 @@ export default function PostDetails() {
 
     try {
       if (isLiked) {
-        // Unlike the post
+        // Unlike the post - Fixed URL
         const response = await axios.delete(
-          `http://localhost:3000/api/v1/${id}`,
+          `http://localhost:3000/api/v1/likes/${id}`, // Fixed: Added 'likes' to the path
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -89,9 +92,9 @@ export default function PostDetails() {
           setLikes((prev) => Math.max(0, prev - 1));
         }
       } else {
-        // Like the post
+        // Like the post - Fixed URL
         const response = await axios.post(
-          `http://localhost:3000/api/v1/${id}`,
+          `http://localhost:3000/api/v1/likes/${id}`, // Fixed: Added 'likes' to the path
           {}, // Empty body, postId comes from URL params
           {
             headers: {
@@ -134,6 +137,7 @@ export default function PostDetails() {
           category: data?.category,
           tags: data?.tags || [],
           poster: {
+            _id: data?.userId?._id,
             name: data?.userId?.name || "Anonymous",
             avatar: data?.userId?.avatar || "https://picsum.photos/seed/10/200",
             email: data?.userId?.email || "",
@@ -151,6 +155,38 @@ export default function PostDetails() {
     fetchPost();
     fetchLikeData(); // Fetch like data when component mounts
   }, [id]);
+
+  const handleConnection = async () => {
+    if (isConnecting) return; // Prevent multiple clicks
+
+    setIsConnecting(true);
+    try {
+      const token = await getToken();
+
+      const res = await axios.post(
+        "http://localhost:3000/api/v1/connections/sendRequest",
+        { receiverId: post.poster._id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data.success) {
+        setConnectionStatus("Connection request sent successfully!");
+      }
+    } catch (error) {
+      console.log("ConnectionError", error);
+      if (error.response?.data?.message) {
+        setConnectionStatus(error.response.data.message);
+      } else {
+        setConnectionStatus("Failed to send connection request");
+      }
+    } finally {
+      setIsConnecting(false);
+    }
+  };
 
   if (!post) return <p className="text-center py-12">Loading item...</p>;
 
@@ -256,6 +292,29 @@ export default function PostDetails() {
                   </div>
                 </CardContent>
               </Card>
+
+              <div>
+                <Button
+                  onClick={handleConnection}
+                  disabled={isConnecting}
+                  className="hidden sm:flex bg-[#3b82f6] hover:bg-[#3b82f6]/90 p-[20px] mx-auto w-full"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  {isConnecting ? "Sending..." : "Send Connection"}
+                </Button>
+                {connectionStatus && (
+                  <p
+                    className={cn(
+                      "text-sm text-center mt-2",
+                      connectionStatus.includes("success")
+                        ? "text-green-600"
+                        : "text-red-600"
+                    )}
+                  >
+                    {connectionStatus}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Description & Comments */}

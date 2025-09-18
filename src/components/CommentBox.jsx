@@ -57,7 +57,9 @@ export default function CommentBox() {
       if (response.data.success) {
         const comment = response.data.data;
         const normalizedComment = { ...comment, replies: [] };
+        //!  this line makes an object like this {name:abc,postid:23 and replies:[]}
         setComments((prev) => [normalizedComment, ...prev]);
+        //!and this line will include old comments + new comments
         setNewComment("");
       }
     } catch (error) {

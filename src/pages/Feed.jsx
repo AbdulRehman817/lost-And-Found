@@ -44,86 +44,6 @@ import {
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-// const items = [
-//   {
-//     id: "1",
-//     title: "Lost: Black Leather Wallet",
-//     status: "Lost",
-//     location: "Central Park, New York",
-//     date: "2024-07-20",
-//     imageUrl: "https://picsum.photos/seed/1/400/300",
-//     imageHint: "wallet",
-//     user: {
-//         name: "John Doe",
-//         avatar: "https://picsum.photos/seed/10/100"
-//     }
-//   },
-//   {
-//     id: "2",
-//     title: "Found: iPhone 14 Pro",
-//     status: "Found",
-//     location: "Starbucks, 12th Street",
-//     date: "2024-07-19",
-//     imageUrl: "https://picsum.photos/seed/2/400/300",
-//     imageHint: "phone",
-//      user: {
-//         name: "Jane Smith",
-//         avatar: "https://picsum.photos/seed/11/100"
-//     }
-//   },
-//   {
-//     id: "3",
-//     title: "Lost: Golden Retriever 'Buddy'",
-//     status: "Lost",
-//     location: "Near Westlake Shopping Center",
-//     date: "2024-07-18",
-//     imageUrl: "https://picsum.photos/seed/3/400/300",
-//     imageHint: "dog",
-//      user: {
-//         name: "Peter Jones",
-//         avatar: "https://picsum.photos/seed/12/100"
-//     }
-//   },
-//   {
-//     id: "4",
-//     title: "Found: Set of Keys",
-//     status: "Found",
-//     location: "Metro Station Platform B",
-//     date: "2024-07-21",
-//     imageUrl: "https://picsum.photos/seed/4/400/300",
-//     imageHint: "keys",
-//      user: {
-//         name: "Maria Garcia",
-//         avatar: "https://picsum.photos/seed/13/100"
-//     }
-//   },
-//   {
-//     id: "5",
-//     title: "Lost: Blue Jansport Backpack",
-//     status: "Lost",
-//     location: "City University Library",
-//     date: "2024-07-17",
-//     imageUrl: "https://picsum.photos/seed/5/400/300",
-//     imageHint: "backpack",
-//      user: {
-//         name: "Chris Williams",
-//         avatar: "https://picsum.photos/seed/14/100"
-//     }
-//   },
-//   {
-//     id: "6",
-//     title: "Found: Prescription Glasses",
-//     status: "Found",
-//     location: "Bus Stop on 5th Ave",
-//     date: "2024-07-20",
-//     imageUrl: "https://picsum.photos/seed/6/400/300",
-//     imageHint: "glasses",
-//      user: {
-//         name: "Patricia Miller",
-//         avatar: "https://picsum.photos/seed/15/100"
-//     }
-//   },
-// ];
 
 function Filters() {
   const [date, setDate] = useState();
@@ -198,9 +118,7 @@ export default function Feed() {
   const [openComments, setOpenComments] = useState({});
   const [commentText, setCommentText] = useState({}); // track input text
 
-  const handleProductClick = (id) => {
-    navigate(`/feed/${id}`);
-  };
+
   useEffect(() => {
     const fetchPost = async () => {
       setLoading(true);
@@ -280,7 +198,7 @@ export default function Feed() {
                   <ItemCard
                     key={item._id}
                     {...item}
-                    // onClick={() => handleProductClick(item._id)}
+                  
                   />
                 ))}
               </div>
