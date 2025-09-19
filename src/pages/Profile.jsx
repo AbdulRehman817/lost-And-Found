@@ -25,7 +25,6 @@ import {
   Mail,
   Phone,
   User,
-  Globe,
   FileText,
   LayoutGrid,
   PlusCircle,
@@ -34,43 +33,14 @@ import {
   Bell,
   CheckCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as React from "react";
 import RequestsList from "../components/request-list";
-import { useSearchParams } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import { useParams, useSearchParams } from "react-router-dom";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import axios from "axios";
 
-// ✅ Initial items fixed
-const initialUserItems = [
-  {
-    id: "1",
-    title: "Lost: Black Leather Wallet",
-    status: "Lost" | "Found" | "Reunited",
-    location: "Central Park, New York",
-    date: "2024-07-20",
-    imageUrl: "https://picsum.photos/seed/1/400/300",
-    imageHint: "wallet",
-  },
-  {
-    id: "5",
-    title: "Lost: Blue Jansport Backpack",
-    status: "Lost" | "Found" | "Reunited",
-    location: "City University Library",
-    date: "2024-07-17",
-    imageUrl: "https://picsum.photos/seed/5/400/300",
-    imageHint: "backpack",
-  },
-  {
-    id: "7",
-    title: "Found: Ray-Ban Sunglasses",
-    status: "Found" | "Lost" | "Reunited",
-    location: "Beachfront Cafe",
-    date: "2024-07-15",
-    imageUrl: "https://picsum.photos/seed/7/400/300",
-    imageHint: "sunglasses",
-  },
-];
-
+// ✅ Example stats (replace with backend if needed)
 const userStats = {
   posts: 3,
   activeRequests: 2,
@@ -81,15 +51,41 @@ export default function ProfilePage() {
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("tab") || "dashboard";
   const { isSignedIn, user } = useUser();
+  const { id } = useParams();
+  const { getToken } = useAuth();
+
   const [bio, setBio] = useState(user?.publicMetadata?.bio || "");
   const [phone, setPhone] = useState(user?.publicMetadata?.phone || "");
+  const [postDetails, setPostDetails] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
 
-  const [isEditing, setIsEditing] = React.useState(false);
+  // ✅ Fetch logged-in user posts
+  const getAllUserPosts = async () => {
+    try {
+      const token = await getToken();
+      const response = await axios.get(
+        `http://localhost:3000/api/v1/getUserPosts`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = response.data.data || [];
+      console.log("data", data);
+      setPostDetails(data);
+    } catch (error) {
+      console.error("❌ Error fetching posts:", error);
+    }
+  };
 
-  const [userItems, setUserItems] = React.useState(initialUserItems);
+  useEffect(() => {
+    if (isSignedIn) {
+      getAllUserPosts();
+    }
+  }, [id, isSignedIn]);
 
-  console.log(user.primaryEmailAddress.emailAddress);
-  console.log(user.username);
+  // ✅ Update profile
   const handleProfileChange = async () => {
     try {
       await fetch("http://localhost:3000/api/v1/profile", {
@@ -104,22 +100,8 @@ export default function ProfilePage() {
     }
   };
 
-  const handleMarkAsReunited = () => {
-    setUserItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId ? { ...item, status: "Reunited" } : item
-      )
-    );
-    toast({
-      title: "Congratulations!",
-      description: "This item has been marked as reunited.",
-      className:
-        "bg-green-100 border-green-300 dark:bg-green-900/50 dark:border-green-700",
-    });
-  };
-
   return (
-    <div className="flex min-h-screen flex-col bg-[#3b82f6]/11 ">
+    <div className="flex min-h-screen flex-col bg-[#3b82f6]/11">
       <Header />
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4 md:px-6">
@@ -149,7 +131,7 @@ export default function ProfilePage() {
                 <Card className="bg-background">
                   <CardHeader>
                     <CardTitle className="font-headline text-3xl">
-                      Welcome back, {user.username}!
+                      Welcome back, {user?.username || "User"}!
                     </CardTitle>
                     <CardDescription>
                       Here's a summary of your activity on Reunite.
@@ -173,6 +155,7 @@ export default function ProfilePage() {
                           </p>
                         </CardContent>
                       </Card>
+
                       <Card className="bg-background">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                           <CardTitle className="text-sm font-medium">
@@ -189,6 +172,7 @@ export default function ProfilePage() {
                           </p>
                         </CardContent>
                       </Card>
+
                       <Card className="bg-background">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                           <CardTitle className="text-sm font-medium">
@@ -206,9 +190,10 @@ export default function ProfilePage() {
                         </CardContent>
                       </Card>
                     </div>
+
                     <div className="flex justify-start">
-                      <Button asChild className="bg-[#3b82f6]">
-                        <a href="/create">
+                      <Button className="bg-[#3b82f6]">
+                        <a href="/create" className="flex items-center">
                           <PlusCircle className="mr-2 h-4 w-4" /> Post a New
                           Item
                         </a>
@@ -217,6 +202,7 @@ export default function ProfilePage() {
                   </CardContent>
                 </Card>
               </TabsContent>
+
               {/* Profile Tab */}
               <TabsContent value="profile">
                 <Card className="bg-background">
@@ -245,35 +231,23 @@ export default function ProfilePage() {
                       <div className="relative mb-4">
                         <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
                           <AvatarImage
-                            src={user.imageUrl}
-                            alt={user.username}
+                            src={user?.imageUrl}
+                            alt={user?.username}
                           />
                           <AvatarFallback>
                             {user?.username?.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        {isEditing && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="absolute bottom-0 right-0 rounded-full bg-card"
-                          >
-                            <Edit className="h-4 w-4" />
-                            <span className="sr-only">
-                              Edit profile picture
-                            </span>
-                          </Button>
-                        )}
                       </div>
                       {isEditing ? (
                         <Input
                           name="name"
-                          value={user.username}
+                          value={user?.username}
                           className="text-2xl font-bold font-headline text-center max-w-sm mx-auto"
                         />
                       ) : (
                         <h2 className="font-headline text-3xl font-bold">
-                          {user.username}
+                          {user?.username}
                         </h2>
                       )}
                     </div>
@@ -288,11 +262,11 @@ export default function ProfilePage() {
                         </Label>
                         <Input
                           id="email"
-                          name="email"
-                          value={user.primaryEmailAddress.emailAddress}
-                          readOnly={!isEditing}
+                          value={user?.primaryEmailAddress?.emailAddress || ""}
+                          readOnly
                         />
                       </div>
+
                       <div className="space-y-2">
                         <Label
                           htmlFor="phone"
@@ -302,23 +276,23 @@ export default function ProfilePage() {
                         </Label>
                         <Input
                           id="phone"
-                          name="phone"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           readOnly={!isEditing}
                         />
                       </div>
                     </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="bio" className="flex items-center gap-2">
                         <FileText className="h-4 w-4" /> Bio
                       </Label>
                       <Textarea
                         id="bio"
-                        name="bio"
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
                         className="min-h-[100px]"
+                        readOnly={!isEditing}
                       />
                     </div>
 
@@ -326,12 +300,13 @@ export default function ProfilePage() {
                       <div className="flex justify-end">
                         <Button onClick={handleProfileChange}>
                           Save Changes
-                        </Button>{" "}
+                        </Button>
                       </div>
                     )}
                   </CardContent>
                 </Card>
               </TabsContent>
+
               {/* Posts Tab */}
               <TabsContent value="posts">
                 <Card className="bg-background">
@@ -340,25 +315,18 @@ export default function ProfilePage() {
                       <CardTitle className="font-headline text-2xl">
                         Your Posts
                       </CardTitle>
-                      <Button asChild className="bg-[#3b82f6]">
-                        <a href="/create">
+                      <Button className="bg-[#3b82f6]">
+                        <a href="/create" className="flex items-center">
                           <PlusCircle className="mr-2 h-4 w-4" /> Post New Item
                         </a>
                       </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="bg-background">
-                    {userItems.length > 0 ? (
-                      <div className="grid grid-cols-1  gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                        {userItems.map((item) => (
-                          <ItemCard
-                            key={item.id}
-                            {...item}
-                            showManagement
-                            onMarkAsReunited={() =>
-                              handleMarkAsReunited(item.id)
-                            }
-                          />
+                    {postDetails.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                        {postDetails.map((item) => (
+                          <ItemCard key={item._id} {...item} showManagement />
                         ))}
                       </div>
                     ) : (
@@ -367,21 +335,22 @@ export default function ProfilePage() {
                         <p className="font-semibold">
                           You haven't posted any items yet.
                         </p>
-                        <Button asChild>
-                          <a href="/submit">Post an Item</a>
+                        <Button>
+                          <a href="/create">Post an Item</a>
                         </Button>
                       </div>
                     )}
                   </CardContent>
                 </Card>
               </TabsContent>
+
               {/* Requests Tab */}
               <TabsContent value="requests">
                 <RequestsList />
               </TabsContent>
+
               {/* Settings Tab */}
               <TabsContent value="settings">
-                {" "}
                 <Card className="bg-background">
                   <CardHeader>
                     <CardTitle className="font-headline text-2xl">
@@ -395,6 +364,7 @@ export default function ProfilePage() {
                     <h3 className="font-semibold text-lg flex items-center gap-2">
                       <Bell className="h-5 w-5" /> Notifications
                     </h3>
+
                     <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <Label
@@ -410,6 +380,7 @@ export default function ProfilePage() {
                       </div>
                       <Switch id="email-notifications" defaultChecked />
                     </div>
+
                     <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <Label
@@ -425,23 +396,25 @@ export default function ProfilePage() {
                       </div>
                       <Switch id="match-notifications" defaultChecked />
                     </div>
+
                     <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <Label htmlFor="newsletter" className="text-base">
                           Newsletter
-                        </Label>{" "}
+                        </Label>
                         <p className="text-sm text-muted-foreground">
                           Receive occasional updates and news from Reunite.
                         </p>
                       </div>
                       <Switch id="newsletter" />
                     </div>
+
                     <div className="flex justify-end">
                       <Button className="bg-[#3b82f6]">Save Preferences</Button>
                     </div>
                   </CardContent>
                 </Card>
-              </TabsContent>{" "}
+              </TabsContent>
             </div>
           </Tabs>
         </div>
