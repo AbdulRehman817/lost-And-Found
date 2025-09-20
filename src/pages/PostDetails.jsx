@@ -7,7 +7,6 @@ import { Card, CardContent } from "../components/ui/card";
 import { Separator } from "../components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
-import { Textarea } from "../components/ui/textarea";
 import {
   Calendar,
   MapPin,
@@ -31,36 +30,34 @@ export default function PostDetails() {
   const [isLiking, setIsLiking] = React.useState(false);
   const [connectionStatus, setConnectionStatus] = React.useState("");
   const [isConnecting, setIsConnecting] = React.useState(false);
+  const [noteMessage, setNoteMessage] = React.useState("");
+  const [showNoteBox, setShowNoteBox] = React.useState(false);
+  // NEW: Modal toggle state
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   // Function to fetch like status and count
   const fetchLikeData = async () => {
     try {
       const token = await getToken();
 
-      // Get total likes for the post - Fixed URL
+      // Get total likes
       const likesResponse = await axios.get(
-        `http://localhost:3000/api/v1/likes/${id}`, // Fixed: Added 'likes' to the path
+        `http://localhost:3000/api/v1/likes/${id}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       if (likesResponse.data.success) {
         setLikes(likesResponse.data.count || 0);
       }
 
-      // Check if current user has liked the post - Fixed URL
+      // Check if current user has liked
       const userLikeResponse = await axios.get(
-        `http://localhost:3000/api/v1/likes/user/${id}`, // Fixed: Added 'likes' to the path
+        `http://localhost:3000/api/v1/likes/user/${id}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       if (userLikeResponse.data.success) {
         setIsLiked(userLikeResponse.data.isLiked || false);
       }
@@ -70,39 +67,28 @@ export default function PostDetails() {
   };
 
   const handleLike = async () => {
-    if (isLiking) return; // Prevent multiple rapid clicks
-
+    if (isLiking) return;
     setIsLiking(true);
     const token = await getToken();
 
     try {
       if (isLiked) {
-        // Unlike the post - Fixed URL
+        // Unlike
         const response = await axios.delete(
-          `http://localhost:3000/api/v1/likes/${id}`, // Fixed: Added 'likes' to the path
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `http://localhost:3000/api/v1/likes/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-
         if (response.data.success || response.status === 200) {
           setIsLiked(false);
           setLikes((prev) => Math.max(0, prev - 1));
         }
       } else {
-        // Like the post - Fixed URL
+        // Like
         const response = await axios.post(
-          `http://localhost:3000/api/v1/likes/${id}`, // Fixed: Added 'likes' to the path
-          {}, // Empty body, postId comes from URL params
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `http://localhost:3000/api/v1/likes/${id}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-
         if (response.data.success) {
           setIsLiked(true);
           setLikes((prev) => prev + 1);
@@ -110,7 +96,6 @@ export default function PostDetails() {
       }
     } catch (error) {
       console.log("Error handling like:", error);
-      // Optionally show error message to user
     } finally {
       setIsLiking(false);
     }
@@ -145,7 +130,6 @@ export default function PostDetails() {
           },
         });
 
-        // Set initial like count from post data
         setLikes(data?.likeCount || 0);
       } catch (error) {
         console.error("Error fetching post:", error);
@@ -153,26 +137,20 @@ export default function PostDetails() {
     };
 
     fetchPost();
-    fetchLikeData(); // Fetch like data when component mounts
+    fetchLikeData();
   }, [id]);
 
-  const handleConnection = async () => {
-    if (isConnecting) return; // Prevent multiple clicks
-
+  const handleConnection = async (receiverId, message = null) => {
+    if (isConnecting) return;
     setIsConnecting(true);
+
     try {
       const token = await getToken();
-
       const res = await axios.post(
         "http://localhost:3000/api/v1/connections/sendRequest",
-        { receiverId: post.poster._id },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { receiverId: post.poster._id, message },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       if (res.data.success) {
         setConnectionStatus("Connection request sent successfully!");
       }
@@ -209,9 +187,7 @@ export default function PostDetails() {
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <div className="text-center text-white p-4 bg-black/30 rounded-lg backdrop-blur-sm">
                         <CheckCircle className="h-16 w-16 mx-auto text-green-400" />
-                        <h2 className="text-3xl font-bold font-headline mt-2">
-                          Reunited!
-                        </h2>
+                        <h2 className="text-3xl font-bold mt-2">Reunited!</h2>
                         <p className="text-green-200">
                           This item has been returned to its owner.
                         </p>
@@ -235,34 +211,30 @@ export default function PostDetails() {
                     >
                       {post.status}
                     </Badge>
-                    <h1 className="font-headline text-3xl font-bold lg:text-4xl mt-2">
+                    <h1 className="text-3xl font-bold lg:text-4xl mt-2">
                       {post.title}
                     </h1>
                   </div>
 
                   <div className="space-y-4 text-base">
                     <div className="flex items-start gap-4">
-                      <MapPin className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
+                      <MapPin className="h-6 w-6 mt-1 text-primary" />
                       <div>
-                        <p className="font-semibold text-foreground">
-                          Location
-                        </p>
+                        <p className="font-semibold">Location</p>
                         <p className="text-muted-foreground">{post.location}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-4">
-                      <Calendar className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
+                      <Calendar className="h-6 w-6 mt-1 text-primary" />
                       <div>
-                        <p className="font-semibold text-foreground">Date</p>
+                        <p className="font-semibold">Date</p>
                         <p className="text-muted-foreground">{post.date}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-4">
-                      <Tag className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
+                      <Tag className="h-6 w-6 mt-1 text-primary" />
                       <div>
-                        <p className="font-semibold text-foreground">
-                          Category
-                        </p>
+                        <p className="font-semibold">Category</p>
                         <p className="text-muted-foreground">{post.category}</p>
                       </div>
                     </div>
@@ -284,9 +256,7 @@ export default function PostDetails() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-semibold text-foreground">
-                        {post.poster.name}
-                      </p>
+                      <p className="font-semibold">{post.poster.name}</p>
                       <p className="text-sm text-muted-foreground">Poster</p>
                     </div>
                   </div>
@@ -295,9 +265,9 @@ export default function PostDetails() {
 
               <div>
                 <Button
-                  onClick={handleConnection}
+                  onClick={() => setIsModalOpen(true)} // open modal
                   disabled={isConnecting}
-                  className="hidden sm:flex bg-[#3b82f6] hover:bg-[#3b82f6]/90 p-[20px] mx-auto w-full"
+                  className="hidden sm:flex bg-blue-600 hover:bg-blue-700 p-[20px] mx-auto w-full"
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
                   {isConnecting ? "Sending..." : "Send Connection"}
@@ -321,9 +291,7 @@ export default function PostDetails() {
             <div className="md:col-span-2 lg:col-span-3 space-y-8">
               <Card className="bg-background">
                 <CardContent className="p-6 space-y-4">
-                  <h2 className="font-headline text-2xl font-bold">
-                    Description
-                  </h2>
+                  <h2 className="text-2xl font-bold">Description</h2>
                   <p className="text-base leading-relaxed text-muted-foreground">
                     {post.description}
                   </p>
@@ -334,7 +302,7 @@ export default function PostDetails() {
                     ).map((tag, index) => (
                       <span
                         key={`${tag}-${index}`}
-                        className="bg-[#1e293b] text-white text-sm px-3 py-1 rounded-full"
+                        className="bg-slate-800 text-white text-sm px-3 py-1 rounded-full"
                       >
                         {tag.trim()}
                       </span>
@@ -345,7 +313,7 @@ export default function PostDetails() {
 
               <Card className="bg-background">
                 <CardContent className="p-6 space-y-6">
-                  <h2 className="font-headline text-2xl font-bold flex items-center gap-3">
+                  <h2 className="text-2xl font-bold flex items-center gap-3">
                     <MessageSquare className="h-6 w-6 text-primary" /> Community
                     Comments
                   </h2>
@@ -383,6 +351,68 @@ export default function PostDetails() {
         </div>
       </main>
       <Footer />
+
+      {/* 🔹 Tailwind Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-background rounded-xl shadow-2xl w-full max-w-lg p-6">
+            <h2 className="text-xl font-bold mb-4">Send Connection Request</h2>
+
+            <div className="space-y-3">
+              <button
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium shadow-sm transition"
+                onClick={() => {
+                  handleConnection(post.poster._id);
+                  setIsModalOpen(false);
+                }}
+              >
+                Send without note
+              </button>
+              <button
+                className="w-full border border-gray-300 hover:bg-muted/60 text-foreground py-2 px-4 rounded-lg font-medium transition"
+                onClick={() => {
+                  setShowNoteBox(true);
+                }}
+              >
+                Add a note
+              </button>
+            </div>
+
+            <div className="space-y-4 mt-6">
+              {showNoteBox && (
+                <div className="space-y-4 mt-6">
+                  <textarea
+                    onChange={(e) => setNoteMessage(e.target.value)}
+                    value={noteMessage}
+                    placeholder="Write a personal note..."
+                    className="w-full border border-muted rounded-lg p-3 text-sm text-foreground bg-muted/40 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    rows="4"
+                  />
+                  <div className="flex justify-between mt-4">
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition mt-2"
+                      onClick={() => {
+                        handleConnection(post.poster._id, noteMessage);
+                        setShowNoteBox(false);
+                        setIsModalOpen(false);
+                      }}
+                    >
+                      Send with note
+                    </button>
+
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition mt-2"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
