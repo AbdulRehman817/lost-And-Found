@@ -58,6 +58,26 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState(user?.publicMetadata?.phone || "");
   const [postDetails, setPostDetails] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [activeRequests, setActiveRequets] = useState([]);
+
+  const getAllPendingRequests = async () => {
+    try {
+      const token = await getToken();
+      const response = await axios.get(
+        "http://localhost:3000/api/v1/connections/getPendingRequests",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = response.data.data || [];
+      setActiveRequets(data);
+      console.log("pending request", data);
+    } catch (error) {
+      console.error("error", error);
+    }
+  };
 
   // ✅ Fetch logged-in user posts
   const getAllUserPosts = async () => {
@@ -82,6 +102,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (isSignedIn) {
       getAllUserPosts();
+      getAllPendingRequests();
     }
   }, [id, isSignedIn]);
 
@@ -165,7 +186,7 @@ export default function ProfilePage() {
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl font-bold">
-                            {userStats.activeRequests}
+                            {activeRequests.length}
                           </div>
                           <p className="text-xs text-muted-foreground">
                             requests needing your attention
@@ -346,7 +367,7 @@ export default function ProfilePage() {
 
               {/* Requests Tab */}
               <TabsContent value="requests">
-                <RequestsList />
+                <RequestsList requests={activeRequests} />
               </TabsContent>
 
               {/* Settings Tab */}
