@@ -59,6 +59,23 @@ export default function ProfilePage() {
   const [postDetails, setPostDetails] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [activeRequests, setActiveRequets] = useState([]);
+  // const [acceptedRequests,setAcceptedRequests]=useState([]);
+  const fetchAllAcceptedRequets = async () => {
+    try {
+      const token = await getToken();
+      const res = await axios.get(
+        "http://localhost:3000/api/v1/connections/getAcceptedRequests",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = res.data.data;
+      setActiveRequets(data);
+      console.log("accepted request ", data);
+    } catch (error) {
+      console.error("❌ Error fetching requests:", error);
+    }
+  };
 
   const getAllPendingRequests = async () => {
     try {
@@ -103,6 +120,7 @@ export default function ProfilePage() {
     if (isSignedIn) {
       getAllUserPosts();
       getAllPendingRequests();
+      fetchAllAcceptedRequets();
     }
   }, [id, isSignedIn]);
 
