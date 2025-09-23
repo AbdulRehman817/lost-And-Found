@@ -1,5 +1,6 @@
 import * as React from "react";
 import axios from "axios";
+import { useEffect } from "react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/footer";
 import { Badge } from "../components/ui/badge";
@@ -17,12 +18,14 @@ import {
   PlusCircle,
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import CommentBox from "../components/CommentBox";
 import { useAuth } from "@clerk/clerk-react";
 
 export default function PostDetails() {
   const { id } = useParams();
+  const [hasConnection, setHasConnection] = React.useState(false);
+
   const [post, setPost] = React.useState(null);
   const { getToken } = useAuth();
   const [likes, setLikes] = React.useState(0);
@@ -32,31 +35,24 @@ export default function PostDetails() {
   const [isConnecting, setIsConnecting] = React.useState(false);
   const [noteMessage, setNoteMessage] = React.useState("");
   const [showNoteBox, setShowNoteBox] = React.useState(false);
-  // NEW: Modal toggle state
   const [isModalOpen, setIsModalOpen] = React.useState(false);
 
-  // Function to fetch like status and count
+  // 🔹 Fetch like data
   const fetchLikeData = async () => {
     try {
       const token = await getToken();
 
-      // Get total likes
       const likesResponse = await axios.get(
         `http://localhost:3000/api/v1/likes/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       if (likesResponse.data.success) {
         setLikes(likesResponse.data.count || 0);
       }
 
-      // Check if current user has liked
       const userLikeResponse = await axios.get(
         `http://localhost:3000/api/v1/likes/user/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       if (userLikeResponse.data.success) {
         setIsLiked(userLikeResponse.data.isLiked || false);
@@ -66,6 +62,7 @@ export default function PostDetails() {
     }
   };
 
+  // 🔹 Like/Unlike handler
   const handleLike = async () => {
     if (isLiking) return;
     setIsLiking(true);
@@ -73,7 +70,6 @@ export default function PostDetails() {
 
     try {
       if (isLiked) {
-        // Unlike
         const response = await axios.delete(
           `http://localhost:3000/api/v1/likes/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -83,7 +79,6 @@ export default function PostDetails() {
           setLikes((prev) => Math.max(0, prev - 1));
         }
       } else {
-        // Like
         const response = await axios.post(
           `http://localhost:3000/api/v1/likes/${id}`,
           {},
@@ -101,6 +96,7 @@ export default function PostDetails() {
     }
   };
 
+  // 🔹 Fetch post details
   React.useEffect(() => {
     if (!id) return;
 
@@ -140,6 +136,27 @@ export default function PostDetails() {
     fetchLikeData();
   }, [id]);
 
+  // 🔹 Check connection status
+  useEffect(() => {
+    if (!post) return;
+    const checkConnection = async () => {
+      try {
+        const token = await getToken();
+        const res = await axios.get(
+          `http://localhost:3000/api/v1/connections/status/${post.poster._id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const data = res.data.isConnected;
+        if (data) setHasConnection(true);
+        console.log("data", data);
+      } catch (err) {
+        console.error("Error checking connection:", err);
+      }
+    };
+    checkConnection();
+  }, [post, getToken]);
+
+  // 🔹 Send connection request
   const handleConnection = async (receiverId, message = null) => {
     if (isConnecting) return;
     setIsConnecting(true);
@@ -153,6 +170,7 @@ export default function PostDetails() {
       );
       if (res.data.success) {
         setConnectionStatus("Connection request sent successfully!");
+        setHasConnection(true); // ✅ Immediately hide button
       }
     } catch (error) {
       console.log("ConnectionError", error);
@@ -258,20 +276,32 @@ export default function PostDetails() {
                     <div>
                       <p className="font-semibold">{post.poster.name}</p>
                       <p className="text-sm text-muted-foreground">Poster</p>
+                      {hasConnection && (
+                        <Badge
+                          variant="outline"
+                          className="mt-1 text-green-600"
+                        >
+                          Connected
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Connection button */}
               <div>
-                <Button
-                  onClick={() => setIsModalOpen(true)} // open modal
-                  disabled={isConnecting}
-                  className="hidden sm:flex bg-blue-600 hover:bg-blue-700 p-[20px] mx-auto w-full"
-                >
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  {isConnecting ? "Sending..." : "Send Connection"}
-                </Button>
+                {!hasConnection && (
+                  <Button
+                    onClick={() => setIsModalOpen(true)}
+                    disabled={isConnecting}
+                    className="hidden sm:flex bg-blue-600 hover:bg-blue-700 p-[20px] mx-auto w-full"
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    {isConnecting ? "Sending..." : "Send Connection"}
+                  </Button>
+                )}
+
                 {connectionStatus && (
                   <p
                     className={cn(
@@ -352,8 +382,8 @@ export default function PostDetails() {
       </main>
       <Footer />
 
-      {/* 🔹 Tailwind Modal */}
-      {isModalOpen && (
+      {/* 🔹 Connection Modal */}
+      {isModalOpen && !hasConnection && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-background rounded-xl shadow-2xl w-full max-w-lg p-6">
             <h2 className="text-xl font-bold mb-4">Send Connection Request</h2>
@@ -378,38 +408,36 @@ export default function PostDetails() {
               </button>
             </div>
 
-            <div className="space-y-4 mt-6">
-              {showNoteBox && (
-                <div className="space-y-4 mt-6">
-                  <textarea
-                    onChange={(e) => setNoteMessage(e.target.value)}
-                    value={noteMessage}
-                    placeholder="Write a personal note..."
-                    className="w-full border border-muted rounded-lg p-3 text-sm text-foreground bg-muted/40 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    rows="4"
-                  />
-                  <div className="flex justify-between mt-4">
-                    <button
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition mt-2"
-                      onClick={() => {
-                        handleConnection(post.poster._id, noteMessage);
-                        setShowNoteBox(false);
-                        setIsModalOpen(false);
-                      }}
-                    >
-                      Send with note
-                    </button>
+            {showNoteBox && (
+              <div className="space-y-4 mt-6">
+                <textarea
+                  onChange={(e) => setNoteMessage(e.target.value)}
+                  value={noteMessage}
+                  placeholder="Write a personal note..."
+                  className="w-full border border-muted rounded-lg p-3 text-sm text-foreground bg-muted/40 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  rows="4"
+                />
+                <div className="flex justify-between mt-4">
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition mt-2"
+                    onClick={() => {
+                      handleConnection(post.poster._id, noteMessage);
+                      setShowNoteBox(false);
+                      setIsModalOpen(false);
+                    }}
+                  >
+                    Send with note
+                  </button>
 
-                    <button
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition mt-2"
-                      onClick={() => setIsModalOpen(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition mt-2"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    Cancel
+                  </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -43,7 +43,7 @@ import {
 } from "../components/ui/sheet";
 import { useState, useEffect } from "react";
 import axios from "axios";
-
+import { useAuth } from "@clerk/clerk-react";
 
 function Filters() {
   const [date, setDate] = useState();
@@ -117,14 +117,20 @@ export default function Feed() {
   const [loading, setLoading] = useState(false);
   const [openComments, setOpenComments] = useState({});
   const [commentText, setCommentText] = useState({}); // track input text
-
+  const { getToken } = useAuth();
 
   useEffect(() => {
     const fetchPost = async () => {
+      const token = await getToken();
       setLoading(true);
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/v1/getAllPosts"
+          "http://localhost:3000/api/v1/getAllPosts",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         console.log(response);
         setPost(response.data.data);
@@ -195,11 +201,7 @@ export default function Feed() {
             {view === "list" ? (
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {posts.map((item) => (
-                  <ItemCard
-                    key={item._id}
-                    {...item}
-                  
-                  />
+                  <ItemCard key={item._id} {...item} />
                 ))}
               </div>
             ) : (
