@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 // import Navbar from "./components/Navbar";
 import AuthGuard from "./pages/AuthGuard";
@@ -14,19 +14,16 @@ import Signup from "./pages/Signup";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import AboutPage from "./pages/About";
-import "./index.css";
+import UserProfilePage from "./pages/UserProfile"; // ✅ renamed import to match
 
 export default function Layout() {
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-[#0B0B0C] text-white">
       {/* <Navbar /> */}
       <div className="flex flex-1">
-        {/* Sidebar (not on Home/Login/Signup) */}
-
-        {/* Main content */}
-
         <Routes>
           <Route path="/" element={<Home />} />
+
           <Route
             path="/feed"
             element={
@@ -35,6 +32,7 @@ export default function Layout() {
               </AuthGuard>
             }
           />
+
           <Route
             path="/profile"
             element={
@@ -43,8 +41,14 @@ export default function Layout() {
               </AuthGuard>
             }
           />
+
           <Route path="/feed/:id" element={<PostDetails />} />
+
+          {/* ✅ fixed param name to match useParams in UserProfilePage */}
+          <Route path="/profile/:userId" element={<UserProfilePage />} />
+
           <Route path="/about" element={<AboutPage />} />
+
           <Route
             path="/create"
             element={
@@ -53,14 +57,6 @@ export default function Layout() {
               </AuthGuard>
             }
           />
-          {/* <Route
-            path="/profile"
-            element={
-              <AuthGuard>
-                <Profile />
-              </AuthGuard>
-            }
-          /> */}
 
           <Route
             path="/settings"
@@ -70,6 +66,7 @@ export default function Layout() {
               </AuthGuard>
             }
           />
+
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="*" element={<NotFound />} />

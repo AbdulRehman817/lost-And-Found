@@ -18,10 +18,10 @@ import {
   PlusCircle,
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import CommentBox from "../components/CommentBox";
 import { useAuth } from "@clerk/clerk-react";
-
+import { useNavigate } from "react-router-dom";
 export default function PostDetails() {
   const { id } = useParams();
   const [hasConnection, setHasConnection] = React.useState(false);
@@ -36,7 +36,7 @@ export default function PostDetails() {
   const [noteMessage, setNoteMessage] = React.useState("");
   const [showNoteBox, setShowNoteBox] = React.useState(false);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-
+  const navigate = useNavigate();
   // 🔹 Fetch like data
   const fetchLikeData = async () => {
     try {
@@ -109,6 +109,7 @@ export default function PostDetails() {
 
         setPost({
           id: data?._id,
+          _id: data?._id,
           title: data?.title,
           status: data?.type === "lost" ? "Lost" : "Found",
           location: data?.location,
@@ -119,6 +120,7 @@ export default function PostDetails() {
           tags: data?.tags || [],
           poster: {
             _id: data?.userId?._id,
+            clerkId: data?.userId?.clerkId,
             name: data?.userId?.name || "Anonymous",
             avatar: data?.userId?.avatar || "https://picsum.photos/seed/10/200",
             email: data?.userId?.email || "",
@@ -261,31 +263,34 @@ export default function PostDetails() {
               </Card>
 
               {/* Poster */}
+
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage
-                        src={post.poster.avatar}
-                        alt={post.poster.name}
-                      />
-                      <AvatarFallback>
-                        {post.poster.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold">{post.poster.name}</p>
-                      <p className="text-sm text-muted-foreground">Poster</p>
-                      {hasConnection && (
-                        <Badge
-                          variant="outline"
-                          className="mt-1 text-green-600"
-                        >
-                          Connected
-                        </Badge>
-                      )}
+                  <Link to={`/profile/${post.poster._id}`}>
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage
+                          src={post.poster.avatar}
+                          alt={post.poster.name}
+                        />
+                        <AvatarFallback>
+                          {post.poster.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold">{post.poster.name}</p>
+                        <p className="text-sm text-muted-foreground">Poster</p>
+                        {hasConnection && (
+                          <Badge
+                            variant="outline"
+                            className="mt-1 text-green-600"
+                          >
+                            Connected
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 </CardContent>
               </Card>
 
