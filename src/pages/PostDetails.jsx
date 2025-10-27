@@ -280,14 +280,6 @@ export default function PostDetails() {
                       <div>
                         <p className="font-semibold">{post.poster.name}</p>
                         <p className="text-sm text-muted-foreground">Poster</p>
-                        {hasConnection && (
-                          <Badge
-                            variant="outline"
-                            className="mt-1 text-green-600"
-                          >
-                            Connected
-                          </Badge>
-                        )}
                       </div>
                     </div>
                   </Link>
@@ -295,31 +287,6 @@ export default function PostDetails() {
               </Card>
 
               {/* Connection button */}
-              <div>
-                {!hasConnection && (
-                  <Button
-                    onClick={() => setIsModalOpen(true)}
-                    disabled={isConnecting}
-                    className="hidden sm:flex bg-blue-600 hover:bg-blue-700 p-[20px] mx-auto w-full"
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    {isConnecting ? "Sending..." : "Send Connection"}
-                  </Button>
-                )}
-
-                {connectionStatus && (
-                  <p
-                    className={cn(
-                      "text-sm text-center mt-2",
-                      connectionStatus.includes("success")
-                        ? "text-green-600"
-                        : "text-red-600"
-                    )}
-                  >
-                    {connectionStatus}
-                  </p>
-                )}
-              </div>
             </div>
 
             {/* Description & Comments */}

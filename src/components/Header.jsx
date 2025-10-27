@@ -18,37 +18,75 @@ import {
   PlusCircle,
   LayoutDashboard,
   Bell,
-  Inbox,
   MessageSquare,
-  Package,
 } from "lucide-react";
-import { SignInButton, useUser, useClerk } from "@clerk/clerk-react";
-import { useNavigate } from "react-router-dom";
-
+import { useUser, useClerk, useAuth } from "@clerk/clerk-react";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
 import { ThemeToggle } from "./theme-toggle";
-import * as React from "react";
 import { Badge } from "../components/ui/badge";
-import { Link } from "react-router-dom";
+
 export function Header() {
-  const [notificationCount, setNotificationCount] = React.useState(2);
-
   const { isSignedIn, user } = useUser();
-
+  const { getToken } = useAuth();
+  const [acceptedRequests, setAcceptedRequests] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const { signOut } = useClerk();
   const navigate = useNavigate();
+  const allRequests = [...pendingRequests, ...acceptedRequests]; // ✅ merged notifications
+
   useEffect(() => {
-    // Redirect if not signed in
-    if (!isSignedIn) {
-      navigate("/login"); // Or "/" depending on your app
-    }
+    if (!isSignedIn) navigate("/login");
   }, [isSignedIn, navigate]);
 
+  useEffect(() => {
+    if (isSignedIn) {
+      fetchAllAcceptedRequets();
+      fetchAllPendingRequets();
+    }
+  }, [isSignedIn]);
+
+  // ✅ Auto refresh when Profile accepts request
+  useEffect(() => {
+    window.addEventListener("refresh-requests", refreshNotifications);
+    return () =>
+      window.removeEventListener("refresh-requests", refreshNotifications);
+  }, []);
+
   const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
+  const refreshNotifications = () => {
+    fetchAllAcceptedRequets();
+    fetchAllPendingRequets();
+  };
+
+  const fetchAllAcceptedRequets = async () => {
     try {
-      await signOut(); // wait for Clerk to finish logging out
-      navigate("/login");
-    } catch (err) {
-      console.error("Error during logout:", err);
+      const token = await getToken();
+      const res = await axios.get(
+        "http://localhost:3000/api/v1/connections/getAcceptedRequests",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAcceptedRequests(res.data.data);
+    } catch (error) {
+      console.error("❌ Error fetching accepted:", error);
+    }
+  };
+
+  const fetchAllPendingRequets = async () => {
+    try {
+      const token = await getToken();
+      const res = await axios.get(
+        "http://localhost:3000/api/v1/connections/getPendingRequests",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPendingRequests(res.data.data);
+      console.log("getPendingRequests", res.data.data);
+    } catch (error) {
+      console.error("❌ Error fetching pending:", error);
     }
   };
 
@@ -62,22 +100,20 @@ export function Header() {
               Reunite
             </span>
           </Link>
+
           <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-            <Link
-              to="/"
-              className="text-foreground/70 transition-colors hover:text-foreground"
-            >
+            <Link to="/" className="text-foreground/70 hover:text-foreground">
               Home
             </Link>
             <Link
               to="/about"
-              className="text-foreground/70 transition-colors hover:text-foreground"
+              className="text-foreground/70 hover:text-foreground"
             >
               About
             </Link>
             <Link
               to="/feed"
-              className="text-foreground/70 transition-colors hover:text-foreground"
+              className="text-foreground/70 hover:text-foreground"
             >
               Feed
             </Link>
@@ -97,167 +133,130 @@ export function Header() {
 
           <ThemeToggle />
 
+          {/* ✅ Notifications Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative cursor-pointer"
-              >
+              <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <span className="sr-only">Notifications</span>
-                {notificationCount > 0 && (
+                {allRequests.length > 0 && (
                   <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#3b82f6]"></span>
+                    <span className="absolute h-full w-full rounded-full bg-primary animate-ping opacity-75" />
+                    <span className="relative h-2 w-2 rounded-full bg-[#3b82f6]" />
                   </span>
                 )}
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent className="w-80" align="end">
               <DropdownMenuLabel className="flex justify-between items-center">
                 <span>Notifications</span>
-                <Badge variant="secondary">{notificationCount} New</Badge>
+                <Badge variant="secondary">{allRequests.length}</Badge>
               </DropdownMenuLabel>
+
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/chat/1" className="flex items-start gap-3">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage
-                      src="https://picsum.photos/seed/15/100"
-                      alt="Sarah Lee"
-                    />
-                    <AvatarFallback>SL</AvatarFallback>
-                  </Avatar>
-                  <div className="text-xs">
-                    <p className="font-semibold">Request Accepted</p>
-                    <p className="text-muted-foreground">
-                      You can now chat with Sarah Lee about "Found: iPhone 14
-                      Pro".
-                    </p>
-                  </div>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  to="/profile?tab=requests"
-                  className="flex items-start gap-3"
+
+              {/* ✅ Only 3 notifications */}
+              {allRequests.slice(0, 3).map((u, index) => (
+                <DropdownMenuItem asChild key={index}>
+                  <Link
+                    to={
+                      u.status === "accepted"
+                        ? `/chat/${u.requesterId?._id}`
+                        : `/profile?tab=requests`
+                    }
+                    className="flex items-start gap-3"
+                  >
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={u.requesterId?.profileImage} />
+                      <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
+
+                    <div className="text-xs">
+                      <p className="font-semibold">Request {u.status}</p>
+                      <p className="text-muted-foreground">
+                        {u.status === "accepted"
+                          ? `Chat with ${u.requesterId?.name}`
+                          : `${u.requesterId?.name} wants you to connect`}
+                      </p>
+                    </div>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+
+              {allRequests.length === 0 && (
+                <DropdownMenuItem
+                  disabled
+                  className="text-xs text-muted-foreground"
                 >
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage
-                      src="https://picsum.photos/seed/16/100"
-                      alt="Mike Chen"
-                    />
-                    <AvatarFallback>MC</AvatarFallback>
-                  </Avatar>
-                  <div className="text-xs">
-                    <p className="font-semibold">New Request</p>
-                    <p className="text-muted-foreground">
-                      Mike Chen sent a request for "Found: Set of Keys".
-                    </p>
-                  </div>
-                </Link>
-              </DropdownMenuItem>
+                  No new notifications
+                </DropdownMenuItem>
+              )}
+
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center text-xs text-primary hover:!text-primary">
+              <DropdownMenuItem className="justify-center text-xs text-primary">
                 See all notifications
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* ✅ User Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="secondary"
-                className="relative h-10 w-10 rounded-full "
-              >
-                <Avatar className="h-10 w-10 cursor-pointer">
-                  <AvatarImage
-                    src={
-                      user?.profileImageUrl ||
-                      "https://api.dicebear.com/7.x/thumbs/svg?seed=user"
-                    }
-                  />
+              <Button variant="secondary" className="h-10 w-10 rounded-full">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={user?.profileImageUrl} />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent className="w-56" align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
+
               <DropdownMenuItem asChild>
                 <Link to="/profile">
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  <span>Dashboard</span>
+                  <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
                 </Link>
               </DropdownMenuItem>
+
               <DropdownMenuItem asChild>
-                <Link
-                  href="/profile?tab=requests"
-                  className="flex items-center"
-                >
-                  <Inbox className="mr-2 h-4 w-4" />
-                  <span>Requests</span>
-                  {notificationCount > 0 && (
-                    <Badge variant="secondary" className="ml-auto">
-                      {notificationCount}
-                    </Badge>
-                  )}
+                <Link to="/messages">
+                  <MessageSquare className="mr-2 h-4 w-4" /> Messages
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/messages" className="flex items-center">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  <span>Messages</span>
-                </Link>
-              </DropdownMenuItem>
+
               <DropdownMenuItem asChild>
                 <Link to="/profile?tab=profile">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <User className="mr-2 h-4 w-4" /> Profile
                 </Link>
               </DropdownMenuItem>
+
               <DropdownMenuSeparator />
+
               <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+                <LogOut className="mr-2 h-4 w-4" /> Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* ✅ Mobile Menu */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="md:hidden shrink-0"
-              >
+              <Button variant="outline" size="icon" className="md:hidden">
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
+
             <SheetContent side="right">
               <nav className="grid gap-6 text-lg font-medium mt-8">
-                <Link
-                  to="/"
-                  className="flex items-center gap-2 text-lg font-semibold"
-                >
-                  <ReuniteLogo className="h-8 w-8 text-primary" />
-                  <span className="sr-only">Reunite</span>
-                </Link>
                 <Link to="/" className="hover:text-primary">
                   Home
                 </Link>
-                <Link
-                  to="/feed"
-                  className="text-muted-foreground hover:text-primary"
-                >
+                <Link to="/feed" className="hover:text-primary">
                   Lost & Found Feed
                 </Link>
-                <Link
-                  to="/about"
-                  className="text-muted-foreground hover:text-primary"
-                >
+                <Link to="/about" className="hover:text-primary">
                   About
                 </Link>
                 <Button asChild>

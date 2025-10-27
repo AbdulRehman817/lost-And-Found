@@ -70,8 +70,8 @@ export default function ProfilePage() {
         }
       );
       const data = res.data.data;
+      console.log("getAcceptedRequest", data);
       setActiveRequets(data);
-      console.log("accepted request ", data);
     } catch (error) {
       console.error("❌ Error fetching requests:", error);
     }
@@ -109,7 +109,7 @@ export default function ProfilePage() {
         }
       );
       const data = response.data.data || [];
-      console.log("data", data);
+      console.log("posts", data);
       setPostDetails(data);
     } catch (error) {
       console.error("❌ Error fetching posts:", error);
@@ -187,7 +187,7 @@ export default function ProfilePage() {
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl font-bold">
-                            {userStats.posts}
+                            {postDetails.length}
                           </div>
                           <p className="text-xs text-muted-foreground">
                             items you've listed

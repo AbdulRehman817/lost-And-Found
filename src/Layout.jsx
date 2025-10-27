@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import AboutPage from "./pages/About";
 import UserProfilePage from "./pages/UserProfile"; // ✅ renamed import to match
+import ChatPage from "./pages/ChatPage";
 
 export default function Layout() {
   return (
@@ -63,6 +64,22 @@ export default function Layout() {
             element={
               <AuthGuard>
                 <Settings />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <AuthGuard>
+                <ChatPage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/chat/:userId"
+            element={
+              <AuthGuard>
+                <ChatPage />
               </AuthGuard>
             }
           />
