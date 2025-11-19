@@ -1,30 +1,34 @@
-"use client";
-import * as React from "react";
-import { useSignIn, useUser } from "@clerk/clerk-react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
+import React, { useState, useEffect } from "react";
+import { useSignIn, useUser, useAuth } from "@clerk/clerk-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { ReuniteLogo } from "../components/icons";
+import { Mail, Lock } from "lucide-react";
 
 export default function Login() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const { isSignedIn, isLoaded: userLoaded } = useUser();
-  const navigate = useNavigate();
   const { getToken } = useAuth();
+  const navigate = useNavigate();
 
-  const [emailAddress, setEmailAddress] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState("");
+  const [emailAddress, setEmailAddress] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // redirect if already signed in
-  React.useEffect(() => {
+  // Redirect if already signed in
+  useEffect(() => {
     if (userLoaded && isSignedIn) {
       navigate("/");
     }
   }, [isSignedIn, userLoaded, navigate]);
 
-  // Handle sign in
+  // Handle sign-in
   const onSignInPress = async () => {
     if (!isLoaded) return;
     setError("");
+    setLoading(true);
 
     try {
       const result = await signIn.create({
@@ -33,10 +37,8 @@ export default function Login() {
       });
 
       if (result.status === "complete") {
-        // Activate session
         await setActive({ session: result.createdSessionId });
 
-        // ✅ get Clerk JWT token
         const token = await getToken();
         if (token) {
           localStorage.setItem("token", token);
@@ -49,63 +51,97 @@ export default function Login() {
       setError(
         err?.errors?.[0]?.message || "Sign-in failed. Please try again."
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full mx-auto flex items-center justify-center  px-4">
-      <div className="w-full max-w-md bg-[#0f172a] p-8 rounded-xl shadow-lg border border-[#137C9E]">
-        <h2 className="text-3xl font-semibold text-[#E0F7FA] mb-8 text-center tracking-tight">
-          Sign In
-        </h2>
-
-        {error && (
-          <div className="bg-[#FF5252]/20 text-[#FF5252] text-sm p-3 rounded mb-6 border border-[#FF5252]/40">
-            {error}
+    <div className="min-h-screen w-full flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8 mt-8">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <ReuniteLogo />
+            <span className="text-3xl font-bold text-[#3b82f6]">Reunite</span>
           </div>
-        )}
-
-        <div className="mb-5">
-          <label className="block text-sm font-medium text-[#B2EBF2] mb-2">
-            Email Address
-          </label>
-          <input
-            type="email"
-            className="w-full bg-[#195D6E] border border-[#29B6F6] text-[#E0F7FA] rounded-md px-4 py-3 placeholder-[#81D4FA] focus:outline-none focus:ring-4 focus:ring-[#29B6F6]/60 focus:border-[#29B6F6]"
-            placeholder="you@example.com"
-            value={emailAddress}
-            onChange={(e) => setEmailAddress(e.target.value)}
-          />
+          <p className="text-muted-foreground">Welcome back</p>
         </div>
 
-        <div className="mb-7">
-          <label className="block text-sm font-medium text-[#B2EBF2] mb-2">
-            Password
-          </label>
-          <input
-            type="password"
-            className="w-full bg-[#195D6E] border border-[#29B6F6] text-[#E0F7FA] rounded-md px-4 py-3 placeholder-[#81D4FA] focus:outline-none focus:ring-4 focus:ring-[#29B6F6]/60 focus:border-[#29B6F6]"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+        {/* Card */}
+        <div className="bg-card border rounded-lg shadow-sm p-8">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-lg mb-6 text-sm">
+              {error}
+            </div>
+          )}
 
-        <div>
-          <p className="text-center text-gray-400 mb-[10px]">
-            Already have an account?{" "}
-            <a href="/signup" className="text-blue-500 hover:underline">
-              just register
-            </a>
+          {/* Email Input */}
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
+              Email Address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="email"
+                placeholder="you@example.com"
+                className="pl-10"
+                value={emailAddress}
+                onChange={(e) => setEmailAddress(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Password Input */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="password"
+                placeholder="••••••••"
+                className="pl-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Continue Button */}
+          <Button
+            onClick={onSignInPress}
+            className="w-full bg-[#3b82f6] hover:bg-[#3b82f6]/90 h-11"
+            disabled={loading}
+          >
+            {loading ? "Signing in..." : "Continue"}
+          </Button>
+
+          {/* Sign Up Link */}
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            Don’t have an account?{" "}
+            <Link
+              to="/signup"
+              className="text-[#3b82f6] hover:underline font-medium"
+            >
+              Sign up
+            </Link>
           </p>
         </div>
 
-        <button
-          onClick={onSignInPress}
-          className="w-full bg-gradient-to-r from-[#00B8D4] to-[#00838F] text-white py-3 rounded-md shadow-md hover:from-[#00ACC1] hover:to-[#006064] transition"
-        >
-          Continue
-        </button>
+        {/* Terms */}
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          By continuing, you agree to our{" "}
+          <a href="/terms" className="underline hover:text-foreground">
+            Terms of Service
+          </a>{" "}
+          and{" "}
+          <a href="/privacy" className="underline hover:text-foreground">
+            Privacy Policy
+          </a>
+        </p>
       </div>
     </div>
   );

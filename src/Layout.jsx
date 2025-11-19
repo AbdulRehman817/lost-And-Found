@@ -6,6 +6,7 @@ import AuthGuard from "./pages/AuthGuard";
 
 import Home from "./pages/Home";
 import Feed from "./pages/Feed";
+
 import PostDetails from "./pages/PostDetails";
 import CreatePost from "./pages/CreatePost";
 import ProfilePage from "./pages/Profile";
@@ -75,6 +76,7 @@ export default function Layout() {
               </AuthGuard>
             }
           />
+
           <Route
             path="/chat/:userId"
             element={

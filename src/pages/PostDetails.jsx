@@ -13,88 +13,21 @@ import {
   MapPin,
   Tag,
   MessageSquare,
-  Heart,
   CheckCircle,
-  PlusCircle,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Link, useParams } from "react-router-dom";
 import CommentBox from "../components/CommentBox";
 import { useAuth } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
+
 export default function PostDetails() {
   const { id } = useParams();
   const [hasConnection, setHasConnection] = React.useState(false);
-
   const [post, setPost] = React.useState(null);
+
   const { getToken } = useAuth();
-  const [likes, setLikes] = React.useState(0);
-  const [isLiked, setIsLiked] = React.useState(false);
-  const [isLiking, setIsLiking] = React.useState(false);
-  const [connectionStatus, setConnectionStatus] = React.useState("");
-  const [isConnecting, setIsConnecting] = React.useState(false);
-  const [noteMessage, setNoteMessage] = React.useState("");
-  const [showNoteBox, setShowNoteBox] = React.useState(false);
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
   const navigate = useNavigate();
-  // 🔹 Fetch like data
-  const fetchLikeData = async () => {
-    try {
-      const token = await getToken();
-
-      const likesResponse = await axios.get(
-        `http://localhost:3000/api/v1/likes/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (likesResponse.data.success) {
-        setLikes(likesResponse.data.count || 0);
-      }
-
-      const userLikeResponse = await axios.get(
-        `http://localhost:3000/api/v1/likes/user/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (userLikeResponse.data.success) {
-        setIsLiked(userLikeResponse.data.isLiked || false);
-      }
-    } catch (error) {
-      console.log("Error fetching like data:", error);
-    }
-  };
-
-  // 🔹 Like/Unlike handler
-  const handleLike = async () => {
-    if (isLiking) return;
-    setIsLiking(true);
-    const token = await getToken();
-
-    try {
-      if (isLiked) {
-        const response = await axios.delete(
-          `http://localhost:3000/api/v1/likes/${id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (response.data.success || response.status === 200) {
-          setIsLiked(false);
-          setLikes((prev) => Math.max(0, prev - 1));
-        }
-      } else {
-        const response = await axios.post(
-          `http://localhost:3000/api/v1/likes/${id}`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (response.data.success) {
-          setIsLiked(true);
-          setLikes((prev) => prev + 1);
-        }
-      }
-    } catch (error) {
-      console.log("Error handling like:", error);
-    } finally {
-      setIsLiking(false);
-    }
-  };
 
   // 🔹 Fetch post details
   React.useEffect(() => {
@@ -127,70 +60,20 @@ export default function PostDetails() {
             phone: data?.userId?.phone || "",
           },
         });
-
-        setLikes(data?.likeCount || 0);
       } catch (error) {
         console.error("Error fetching post:", error);
       }
     };
 
     fetchPost();
-    fetchLikeData();
   }, [id]);
-
-  // 🔹 Check connection status
-  useEffect(() => {
-    if (!post) return;
-    const checkConnection = async () => {
-      try {
-        const token = await getToken();
-        const res = await axios.get(
-          `http://localhost:3000/api/v1/connections/status/${post.poster._id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const data = res.data.isConnected;
-        if (data) setHasConnection(true);
-        console.log("data", data);
-      } catch (err) {
-        console.error("Error checking connection:", err);
-      }
-    };
-    checkConnection();
-  }, [post, getToken]);
-
-  // 🔹 Send connection request
-  const handleConnection = async (receiverId, message = null) => {
-    if (isConnecting) return;
-    setIsConnecting(true);
-
-    try {
-      const token = await getToken();
-      const res = await axios.post(
-        "http://localhost:3000/api/v1/connections/sendRequest",
-        { receiverId: post.poster._id, message },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.data.success) {
-        setConnectionStatus("Connection request sent successfully!");
-        setHasConnection(true); // ✅ Immediately hide button
-      }
-    } catch (error) {
-      console.log("ConnectionError", error);
-      if (error.response?.data?.message) {
-        setConnectionStatus(error.response.data.message);
-      } else {
-        setConnectionStatus("Failed to send connection request");
-      }
-    } finally {
-      setIsConnecting(false);
-    }
-  };
 
   if (!post) return <p className="text-center py-12">Loading item...</p>;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
+
       <main className="flex-1 py-12 sm:py-16 bg-muted/40">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
@@ -203,6 +86,7 @@ export default function PostDetails() {
                     alt={post.title}
                     className="object-cover w-full h-full"
                   />
+
                   {post.status === "Reunited" && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <div className="text-center text-white p-4 bg-black/30 rounded-lg backdrop-blur-sm">
@@ -244,6 +128,7 @@ export default function PostDetails() {
                         <p className="text-muted-foreground">{post.location}</p>
                       </div>
                     </div>
+
                     <div className="flex items-start gap-4">
                       <Calendar className="h-6 w-6 mt-1 text-primary" />
                       <div>
@@ -251,6 +136,7 @@ export default function PostDetails() {
                         <p className="text-muted-foreground">{post.date}</p>
                       </div>
                     </div>
+
                     <div className="flex items-start gap-4">
                       <Tag className="h-6 w-6 mt-1 text-primary" />
                       <div>
@@ -263,7 +149,6 @@ export default function PostDetails() {
               </Card>
 
               {/* Poster */}
-
               <Card>
                 <CardContent className="p-6">
                   <Link to={`/profile/${post.poster._id}`}>
@@ -285,18 +170,18 @@ export default function PostDetails() {
                   </Link>
                 </CardContent>
               </Card>
-
-              {/* Connection button */}
             </div>
 
             {/* Description & Comments */}
             <div className="md:col-span-2 lg:col-span-3 space-y-8">
+              {/* Description */}
               <Card className="bg-background">
                 <CardContent className="p-6 space-y-4">
                   <h2 className="text-2xl font-bold">Description</h2>
                   <p className="text-base leading-relaxed text-muted-foreground">
                     {post.description}
                   </p>
+
                   <div className="flex flex-wrap gap-2 pt-2">
                     {(Array.isArray(post.tags)
                       ? post.tags.join(",").split(",")
@@ -313,106 +198,26 @@ export default function PostDetails() {
                 </CardContent>
               </Card>
 
+              {/* Comments Only */}
               <Card className="bg-background">
                 <CardContent className="p-6 space-y-6">
                   <h2 className="text-2xl font-bold flex items-center gap-3">
-                    <MessageSquare className="h-6 w-6 text-primary" /> Community
-                    Comments
+                    <MessageSquare className="h-6 w-6 text-primary" />
+                    Community Comments
                   </h2>
 
+                  {/* Only CommentBox kept */}
                   <CommentBox />
 
                   <Separator className="my-6" />
-
-                  {/* Like Button */}
-                  <div className="flex gap-4">
-                    <div className="flex justify-between items-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleLike}
-                        disabled={isLiking}
-                        className="flex items-center gap-2 text-muted-foreground hover:text-red-500"
-                      >
-                        <Heart
-                          className={cn(
-                            "h-4 w-4",
-                            isLiked ? "text-red-500 fill-current" : "",
-                            isLiking ? "opacity-50" : ""
-                          )}
-                        />
-                        <span>{likes}</span>
-                        {isLiking && <span className="text-xs">...</span>}
-                      </Button>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </div>
           </div>
         </div>
       </main>
+
       <Footer />
-
-      {/* 🔹 Connection Modal */}
-      {isModalOpen && !hasConnection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-background rounded-xl shadow-2xl w-full max-w-lg p-6">
-            <h2 className="text-xl font-bold mb-4">Send Connection Request</h2>
-
-            <div className="space-y-3">
-              <button
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium shadow-sm transition"
-                onClick={() => {
-                  handleConnection(post.poster._id);
-                  setIsModalOpen(false);
-                }}
-              >
-                Send without note
-              </button>
-              <button
-                className="w-full border border-gray-300 hover:bg-muted/60 text-foreground py-2 px-4 rounded-lg font-medium transition"
-                onClick={() => {
-                  setShowNoteBox(true);
-                }}
-              >
-                Add a note
-              </button>
-            </div>
-
-            {showNoteBox && (
-              <div className="space-y-4 mt-6">
-                <textarea
-                  onChange={(e) => setNoteMessage(e.target.value)}
-                  value={noteMessage}
-                  placeholder="Write a personal note..."
-                  className="w-full border border-muted rounded-lg p-3 text-sm text-foreground bg-muted/40 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                  rows="4"
-                />
-                <div className="flex justify-between mt-4">
-                  <button
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition mt-2"
-                    onClick={() => {
-                      handleConnection(post.poster._id, noteMessage);
-                      setShowNoteBox(false);
-                      setIsModalOpen(false);
-                    }}
-                  >
-                    Send with note
-                  </button>
-
-                  <button
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition mt-2"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

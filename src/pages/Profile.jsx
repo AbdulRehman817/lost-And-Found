@@ -121,8 +121,13 @@ export default function ProfilePage() {
       getAllUserPosts();
       getAllPendingRequests();
       fetchAllAcceptedRequets();
+      userProfile();
     }
   }, [id, isSignedIn]);
+
+  const userProfile = async () => {
+    console.log("userData", user);
+  };
 
   // ✅ Update profile
   const handleProfileChange = async () => {

@@ -45,8 +45,21 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 
-function Filters() {
+function Filters({ onFilterChange }) {
   const [date, setDate] = useState();
+  const [keyword, setKeyword] = useState("");
+  const [category, setCategory] = useState("");
+  const [location, setLocation] = useState("");
+
+  const handleApplyFilters = () => {
+    onFilterChange({
+      keyword,
+      category,
+      location,
+      date,
+    });
+  };
+
   return (
     <Card className="border-none shadow-none lg:border lg:shadow-sm">
       <CardHeader>
@@ -59,12 +72,17 @@ function Filters() {
           <Label>Keyword</Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="e.g., wallet, phone" className="pl-10" />
+            <Input
+              placeholder="e.g., wallet, phone"
+              className="pl-10"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+            />
           </div>
         </div>
         <div className="space-y-2">
           <Label>Category</Label>
-          <Select>
+          <Select value={category} onValueChange={setCategory}>
             <SelectTrigger>
               <SelectValue placeholder="Select a category" />
             </SelectTrigger>
@@ -79,7 +97,11 @@ function Filters() {
         </div>
         <div className="space-y-2">
           <Label>Location</Label>
-          <Input placeholder="e.g., Central Park" />
+          <Input
+            placeholder="e.g., Central Park"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label>Date Lost/Found</Label>
@@ -106,7 +128,9 @@ function Filters() {
             </PopoverContent>
           </Popover>
         </div>
-        <Button className="w-full">Apply Filters</Button>
+        <Button className="w-full" onClick={handleApplyFilters}>
+          Apply Filters
+        </Button>
       </CardContent>
     </Card>
   );
@@ -115,35 +139,63 @@ function Filters() {
 export default function Feed() {
   const [posts, setPost] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [openComments, setOpenComments] = useState({});
-  const [commentText, setCommentText] = useState({}); // track input text
-  const { getToken } = useAuth();
+  const [view, setView] = useState("list");
+  const [filters, setFilters] = useState({});
+  const { getToken, isSignedIn } = useAuth();
 
   useEffect(() => {
-    const fetchPost = async () => {
-      const token = await getToken();
-      setLoading(true);
-      try {
-        const response = await axios.get(
-          "http://localhost:3000/api/v1/getAllPosts",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        console.log(response);
-        setPost(response.data.data);
-      } catch (error) {
-        console.log(error, "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPost();
-  }, []);
+    fetchPosts();
+  }, [filters]);
 
-  const [view, setView] = React.useState("list");
+  const fetchPosts = async () => {
+    setLoading(true);
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (filters.category) params.append("category", filters.category);
+      if (filters.location) params.append("location", filters.location);
+
+      // Prepare headers
+      const headers = {};
+
+      // Add authentication token if user is signed in
+      if (isSignedIn) {
+        const token = await getToken();
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+      }
+
+      const response = await axios.get(
+        `http://localhost:3000/api/v1/getAllPosts?${params.toString()}`,
+        { headers }
+      );
+
+      // Client-side filtering for keyword (if needed)
+      let filteredPosts = response.data.data || [];
+
+      if (filters.keyword) {
+        const keyword = filters.keyword.toLowerCase();
+        filteredPosts = filteredPosts.filter(
+          (post) =>
+            post.title?.toLowerCase().includes(keyword) ||
+            post.description?.toLowerCase().includes(keyword) ||
+            post.tags?.some((tag) => tag.toLowerCase().includes(keyword))
+        );
+      }
+
+      setPost(filteredPosts);
+      console.log("feed", filteredPosts);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -191,28 +243,40 @@ export default function Feed() {
                       </SheetDescription>
                     </SheetHeader>
                     <div className="p-6">
-                      <Filters />
+                      <Filters onFilterChange={handleFilterChange} />
                     </div>
                   </SheetContent>
                 </Sheet>
               </div>
             </div>
 
-            {view === "list" ? (
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {posts.map((item) => (
-                  <ItemCard key={item._id} {...item} />
-                ))}
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
               </div>
+            ) : view === "list" ? (
+              <>
+                {posts.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    {posts.map((item) => (
+                      <ItemCard key={item._id} {...item} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-20">
+                    <p className="text-muted-foreground text-lg">
+                      No posts found. Try adjusting your filters.
+                    </p>
+                  </div>
+                )}
+              </>
             ) : (
               <Card className="h-[600px] w-full overflow-hidden rounded-xl">
                 <div className="relative h-full w-full bg-muted">
                   <img
                     src="https://picsum.photos/seed/99/1200/600"
                     alt="Map of items"
-                    fill
-                    className="object-cover"
-                    data-ai-hint="map"
+                    className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background/80 p-6 rounded-lg shadow-lg backdrop-blur-sm">
@@ -226,9 +290,12 @@ export default function Feed() {
                 </div>
               </Card>
             )}
-            <div className="flex justify-center mt-12">
-              <Button variant="outline">Load More</Button>
-            </div>
+
+            {posts.length > 0 && (
+              <div className="flex justify-center mt-12">
+                <Button variant="outline">Load More</Button>
+              </div>
+            )}
           </div>
         </div>
       </main>
