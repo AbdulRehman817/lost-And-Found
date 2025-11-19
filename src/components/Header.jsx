@@ -23,8 +23,9 @@ import {
 import { useUser, useClerk } from "@clerk/clerk-react";
 import { useNavigate, Link } from "react-router-dom";
 import { ThemeToggle } from "./theme-toggle";
-import ConnectionNotifications from "./ConnectionNotifications";
-import CommentNotifications from "./CommentNotifications";
+// import ConnectionNotifications from "./ConnectionNotifications";
+// import CommentNotifications from "./CommentNotifications";
+import UnifiedNotifications from "./UnifiedNotifications";
 
 export function Header() {
   const { isSignedIn, user } = useUser();
@@ -94,9 +95,9 @@ export function Header() {
           </Button>
 
           {/* Connection Notifications Component */}
-          <ConnectionNotifications />
-          <CommentNotifications />
-
+          {/* <ConnectionNotifications />
+          <CommentNotifications /> */}
+          <UnifiedNotifications />
           {/* User Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
