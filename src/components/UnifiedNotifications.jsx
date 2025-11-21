@@ -256,7 +256,7 @@ export default function UnifiedNotifications() {
 
                 <div className="flex gap-2">
                   <Button size="sm" asChild className="h-7 text-xs bg-blue-600">
-                    <Link to={`/post/${comment.postId}`}>View Post</Link>
+                    <Link to={`/feed/${comment.postId._id}`}>View Post</Link>
                   </Button>
 
                   <Button
