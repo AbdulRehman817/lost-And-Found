@@ -20,11 +20,12 @@ import { Link, useParams } from "react-router-dom";
 import CommentBox from "../components/CommentBox";
 import { useAuth } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export default function PostDetails() {
   const { id } = useParams();
-  const [hasConnection, setHasConnection] = React.useState(false);
-  const [post, setPost] = React.useState(null);
+  const [hasConnection, setHasConnection] = useState(false);
+  const [post, setPost] = useState(null);
 
   const { getToken } = useAuth();
   const navigate = useNavigate();

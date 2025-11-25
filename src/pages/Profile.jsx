@@ -164,9 +164,6 @@ export default function ProfilePage() {
               <TabsTrigger value="profile">
                 <User className="mr-2 h-4 w-4" /> My Profile
               </TabsTrigger>
-              <TabsTrigger value="settings">
-                <Settings className="mr-2 h-4 w-4" /> Settings
-              </TabsTrigger>
             </TabsList>
 
             <div className="mt-8">
@@ -391,73 +388,6 @@ export default function ProfilePage() {
               {/* Requests Tab */}
               <TabsContent value="requests">
                 <RequestsList requests={activeRequests} />
-              </TabsContent>
-
-              {/* Settings Tab */}
-              <TabsContent value="settings">
-                <Card className="bg-background">
-                  <CardHeader>
-                    <CardTitle className="font-headline text-2xl">
-                      Settings
-                    </CardTitle>
-                    <CardDescription>
-                      Manage your account and notification preferences.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <h3 className="font-semibold text-lg flex items-center gap-2">
-                      <Bell className="h-5 w-5" /> Notifications
-                    </h3>
-
-                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <Label
-                          htmlFor="email-notifications"
-                          className="text-base"
-                        >
-                          Email Notifications
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          Receive emails about comments on your posts and new
-                          contact requests.
-                        </p>
-                      </div>
-                      <Switch id="email-notifications" defaultChecked />
-                    </div>
-
-                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <Label
-                          htmlFor="match-notifications"
-                          className="text-base"
-                        >
-                          Item Match Alerts
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          Get notified about potential matches for your lost
-                          items.
-                        </p>
-                      </div>
-                      <Switch id="match-notifications" defaultChecked />
-                    </div>
-
-                    <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="newsletter" className="text-base">
-                          Newsletter
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          Receive occasional updates and news from Reunite.
-                        </p>
-                      </div>
-                      <Switch id="newsletter" />
-                    </div>
-
-                    <div className="flex justify-end">
-                      <Button className="bg-[#3b82f6]">Save Preferences</Button>
-                    </div>
-                  </CardContent>
-                </Card>
               </TabsContent>
             </div>
           </Tabs>

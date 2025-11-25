@@ -21,6 +21,30 @@ export default function UserProfilePage() {
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    const fetchConnectionCounts = async () => {
+      if (!userId) return; // Profile user ID
+
+      try {
+        const token = await getToken();
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const res = await axios.get(
+          `http://localhost:3000/api/v1/connection-counts/${userId}`,
+          { headers }
+        );
+
+        console.log("User connection counts:", res.data);
+        // setConnectionCounts(res.data.data);
+      } catch (err) {
+        console.error("Error fetching connection counts:", err);
+        // setConnectionCounts(null);
+      }
+    };
+
+    fetchConnectionCounts();
+  }, [userId]);
+
   // Fetch connection status
   const fetchConnectionStatus = async (userMongoId) => {
     try {

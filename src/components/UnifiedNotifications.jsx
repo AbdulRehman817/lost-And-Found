@@ -19,6 +19,7 @@ import {
   X,
   MessageSquare,
   MessageCircle,
+  CheckIcon,
 } from "lucide-react";
 
 export default function UnifiedNotifications() {
@@ -49,6 +50,91 @@ export default function UnifiedNotifications() {
     ...visibleComments,
   ];
 
+  const fetchAllPendingRequests = async () => {
+    try {
+      const token = await getToken();
+      const res = await axios.get(
+        "http://localhost:3000/api/v1/connections/getPendingRequests",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPendingRequests(res.data.data || []);
+    } catch (error) {
+      console.error("❌ Error fetching pending requests:", error);
+    }
+  };
+
+  const fetchAcceptedConnections = async () => {
+    try {
+      const token = await getToken();
+      const res = await axios.get(
+        "http://localhost:3000/api/v1/connections/getMyConnections",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const newlyAccepted = (res.data.data || []).filter(
+        (c) => c.wasRequester && c.isNewConnection
+      );
+      setAcceptedNotifications(newlyAccepted);
+    } catch (e) {
+      console.log("❌ Accepted Error:", e);
+    }
+  };
+
+  const handleAcceptRequest = async (requesterId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const token = await getToken();
+      await axios.post(
+        "http://localhost:3000/api/v1/connections/acceptRequest",
+
+        { requesterId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Remove from pending list immediately
+      setPendingRequests((prev) =>
+        prev.filter((req) => req.requesterId._id !== requesterId)
+      );
+
+      // Refresh to get updated data
+      setTimeout(() => {
+        fetchAllPendingRequests();
+        fetchAcceptedConnections();
+      }, 500);
+    } catch (error) {
+      console.error("❌ Error accepting request:", error);
+
+      alert("Failed to accept request. Please try again.");
+    }
+  };
+
+  const handleRejectRequest = async (requesterId, e) => {
+    e.preventDefault();
+
+    e.stopPropagation();
+
+    try {
+      const token = await getToken();
+
+      await axios.post(
+        "http://localhost:3000/api/v1/connections/rejectRequest",
+
+        { requesterId },
+
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Remove from pending list immediately
+
+      setPendingRequests((prev) =>
+        prev.filter((req) => req.requesterId._id !== requesterId)
+      );
+    } catch (error) {
+      console.error("❌ Error rejecting request:", error);
+
+      alert("Failed to reject request. Please try again.");
+    }
+  };
+
   // SAVE DISMISSED TO STORAGE
   useEffect(() => {
     localStorage.setItem(
@@ -68,22 +154,6 @@ export default function UnifiedNotifications() {
       setPendingRequests(res.data.data || []);
     } catch (e) {
       console.log("❌ Pending Error:", e);
-    }
-  };
-
-  const fetchAcceptedConnections = async () => {
-    try {
-      const token = await getToken();
-      const res = await axios.get(
-        "http://localhost:3000/api/v1/connections/getMyConnections",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const newlyAccepted = (res.data.data || []).filter(
-        (c) => c.wasRequester && c.isNewConnection
-      );
-      setAcceptedNotifications(newlyAccepted);
-    } catch (e) {
-      console.log("❌ Accepted Error:", e);
     }
   };
 
@@ -173,10 +243,21 @@ export default function UnifiedNotifications() {
                 </p>
 
                 <div className="flex gap-2">
-                  <Button size="sm" className="h-7 text-xs bg-blue-600">
+                  <Button
+                    size="sm"
+                    onClick={(e) => handleAcceptRequest(req.requesterId._id, e)}
+                    className="h-7 text-xs bg-blue-600 hover:bg-blue-700"
+                  >
+                    <CheckIcon className="w-3 h-3 mr-1" />
                     Accept
                   </Button>
-                  <Button size="sm" variant="outline" className="h-7 text-xs">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => handleRejectRequest(req.requesterId._id, e)}
+                    className="h-7 text-xs"
+                  >
+                    <X className="w-3 h-3 mr-1" />
                     Reject
                   </Button>
                 </div>
