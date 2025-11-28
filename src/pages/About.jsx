@@ -49,7 +49,7 @@ export default function AboutPage() {
             <Card className="overflow-hidden shadow-lg border-border/50">
               <div className="relative h-40 w-full bg-muted">
                 <img
-                  src="https://picsum.photos/seed/banner/1200/400"
+                  src="public/banner.jpg"
                   alt="Developer Banner"
                   fill
                   className="object-cover"
@@ -58,27 +58,34 @@ export default function AboutPage() {
               </div>
               <div className="p-6 pt-0">
                 <div className="flex justify-between items-end -mt-16">
-                  <Avatar className="h-32 w-32 border-4 border-background shadow-md">
-                    <AvatarImage
-                      src="https://picsum.photos/seed/dev/200"
-                      alt="Developer Name"
+                  <Avatar className="h-32 w-32 border-4 rounded-full border-background shadow-md">
+                    <img
+                      src="public/pic.png"
+                      alt="Abdul Rehman"
+                      className="h-[280px] relative top-[-68px] w-[120px]"
                     />
-                    <AvatarFallback>DV</AvatarFallback>
                   </Avatar>
+
                   <div className="flex gap-2">
                     <Button variant="outline" size="icon" asChild>
-                      <Link href="#" aria-label="LinkedIn">
+                      <Link
+                        to="https://www.linkedin.com/in/abdulrehman1718"
+                        aria-label="LinkedIn"
+                      >
                         <Linkedin className="h-4 w-4" />
                       </Link>
                     </Button>
                     <Button variant="outline" size="icon" asChild>
-                      <Link href="#" aria-label="GitHub">
+                      <Link
+                        to="https://github.com/AbdulRehman817"
+                        aria-label="GitHub"
+                      >
                         <Github className="h-4 w-4" />
                       </Link>
                     </Button>
                     <Button variant="outline" size="icon" asChild>
                       <Link
-                        href="mailto:developer@example.com"
+                        to="mailto:abdulrehmanbey1718@gmail.com"
                         aria-label="Email"
                       >
                         <Mail className="h-4 w-4" />
@@ -89,7 +96,7 @@ export default function AboutPage() {
                 <div className="mt-4 space-y-4">
                   <div>
                     <h2 className="text-2xl font-bold font-headline">
-                      Developer Name
+                      Abdul Rehman
                     </h2>
                     <p className="text-muted-foreground">
                       Full-Stack Developer & Creator of Reunite
@@ -102,8 +109,11 @@ export default function AboutPage() {
                     problems. To learn more about my work or explore other
                     projects, I invite you to visit my portfolio.
                   </p>
-                  <Button asChild>
-                    <Link href="#">
+                  <Button
+                    className="bg-[#3b82f6] hover:bg-[#3b82f6]/90"
+                    asChild
+                  >
+                    <Link href="https://abdulrehmanweb.vercel.app/">
                       View Portfolio <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>

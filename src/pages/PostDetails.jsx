@@ -69,7 +69,14 @@ export default function PostDetails() {
     fetchPost();
   }, [id]);
 
-  if (!post) return <p className="text-center py-12">Loading item...</p>;
+  if (!post)
+    return (
+      <>
+        <div className="flex justify-center items-center mx-auto">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </>
+    );
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

@@ -1,4 +1,4 @@
-import { Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
@@ -16,7 +16,7 @@ export default function UserProfilePage() {
   const [isConnected, setIsConnected] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [amRequester, setAmRequester] = useState(false);
-
+  const [connectionCounts, setConnectionCounts] = useState(null);
   // Modal and message
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState("");
@@ -34,8 +34,8 @@ export default function UserProfilePage() {
           { headers }
         );
 
-        console.log("User connection counts:", res.data);
-        // setConnectionCounts(res.data.data);
+        // console.log("User connection counts:", res.data.data);
+        setConnectionCounts(res.data.data);
       } catch (err) {
         console.error("Error fetching connection counts:", err);
         // setConnectionCounts(null);
@@ -171,8 +171,8 @@ export default function UserProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-card w-full flex items-center justify-center">
-        <p className="text-xl text-muted-foreground">Loading...</p>
+      <div className="flex justify-center items-center mx-auto">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -203,9 +203,6 @@ export default function UserProfilePage() {
         <div>
           <h1 className="text-4xl font-bold text-foreground">{user.name}</h1>
           <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            📍 {user.location || "No location added"}
-          </p>
         </div>
 
         {/* Connection buttons */}
@@ -243,20 +240,12 @@ export default function UserProfilePage() {
       </div>
 
       {/* About */}
-      <div className="mt-10 px-8">
-        <div className="bg-muted/40 shadow-md rounded-xl p-6 w-full">
-          <h2 className="text-2xl font-semibold text-foreground">About</h2>
-          <p className="mt-3 text-muted-foreground leading-relaxed">
-            {user.bio || "This user hasn't added a bio yet."}
-          </p>
-        </div>
-      </div>
 
       {/* Stats */}
-      <div className="mt-10 px-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="mt-10 px-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="bg-muted/40 shadow-md rounded-xl p-6 text-center">
           <h3 className="text-3xl font-bold text-foreground">
-            {user.connectionsCount || 0}
+            {connectionCounts?.acceptedCount || 0}
           </h3>
           <p className="text-muted-foreground text-sm">Connections</p>
         </div>
@@ -265,12 +254,6 @@ export default function UserProfilePage() {
             {isConnected ? posts.length : "🔒"}
           </h3>
           <p className="text-muted-foreground text-sm">Posts</p>
-        </div>
-        <div className="bg-muted/40 shadow-md rounded-xl p-6 text-center">
-          <h3 className="text-3xl font-bold text-foreground">
-            {user.projectsCount || 0}
-          </h3>
-          <p className="text-muted-foreground text-sm">Projects</p>
         </div>
       </div>
 
@@ -284,35 +267,34 @@ export default function UserProfilePage() {
             posts.length > 0 ? (
               <ul className="mt-4 space-y-4">
                 {posts.map((post) => (
-                  <li
-                    key={post._id}
-                    className="p-4 border rounded-lg shadow hover:shadow-md transition bg-card"
-                  >
-                    {post.imageUrl && (
-                      <img
-                        src={post.imageUrl}
-                        alt={post.title}
-                        className="w-full h-48 object-cover rounded-lg mb-3"
-                      />
-                    )}
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
-                        {post.type}
-                      </span>
-                      <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded">
-                        {post.category}
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {post.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {post.description}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      📍 {post.location}
-                    </p>
-                  </li>
+                  <Link to={`/feed/${post._id}`} className="group block">
+                    <li
+                      key={post._id}
+                      className="p-4 border rounded-lg shadow hover:shadow-md transition bg-card"
+                    >
+                      {post.imageUrl && (
+                        <img
+                          src={post.imageUrl}
+                          alt={post.title}
+                          className="w-full h-48 object-cover rounded-lg mb-3"
+                        />
+                      )}
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                          {post.type}
+                        </span>
+                        <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded">
+                          {post.category}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {post.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {post.description}
+                      </p>
+                    </li>
+                  </Link>
                 ))}
               </ul>
             ) : (

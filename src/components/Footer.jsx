@@ -92,7 +92,9 @@ export function Footer() {
             </p>
             <div className="flex gap-2">
               <Input type="email" placeholder="Enter your email" />
-              <Button>Subscribe</Button>
+              <Button className="bg-[#3b82f6] hover:bg-[#3b82f6]/90">
+                Subscribe
+              </Button>
             </div>
           </div>
         </div>
