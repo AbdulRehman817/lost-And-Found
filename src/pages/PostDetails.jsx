@@ -2,7 +2,7 @@ import * as React from "react";
 import axios from "axios";
 import { useEffect } from "react";
 import { Header } from "../components/Header";
-import { Footer } from "../components/footer";
+import { Footer } from "../components/Footer";
 import { Badge } from "../components/ui/badge";
 import { Card, CardContent } from "../components/ui/card";
 import { Separator } from "../components/ui/separator";

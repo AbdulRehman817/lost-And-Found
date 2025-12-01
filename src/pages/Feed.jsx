@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Header } from "../components/Header";
-import { Footer } from "../components/footer";
+import { Footer } from "../components/Footer";
 import { ItemCard } from "../components/item-card";
 import { Button } from "../components/ui/button";
 import {
