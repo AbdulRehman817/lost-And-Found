@@ -30,7 +30,7 @@ export default function UserProfilePage() {
         const headers = { Authorization: `Bearer ${token}` };
 
         const res = await axios.get(
-          `http://localhost:3000/api/v1/connection-counts/${userId}`,
+          `https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connection-counts/${userId}`,
           { headers }
         );
 
@@ -50,7 +50,7 @@ export default function UserProfilePage() {
     try {
       const token = await getToken();
       const statusRes = await axios.get(
-        `http://localhost:3000/api/v1/connections/status/${userMongoId}`,
+        `https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/status/${userMongoId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setIsConnected(statusRes.data.isConnected);
@@ -70,7 +70,7 @@ export default function UserProfilePage() {
 
         // Fetch user data
         const userRes = await axios.get(
-          `http://localhost:3000/api/v1/profile/${userId}`,
+          `https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/profile/${userId}`,
           { headers }
         );
         console.log("userData", userRes.data.user);
@@ -101,7 +101,7 @@ export default function UserProfilePage() {
         const headers = { Authorization: `Bearer ${token}` };
 
         const postsRes = await axios.get(
-          `http://localhost:3000/api/v1/posts/${userId}`,
+          `https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/posts/${userId}`,
           { headers }
         );
         setPosts(postsRes.data.posts || []);
@@ -118,7 +118,7 @@ export default function UserProfilePage() {
     try {
       const token = await getToken();
       await axios.post(
-        "http://localhost:3000/api/v1/connections/sendRequest",
+        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/sendRequest",
         {
           receiverId: user._id,
           message: msg,
@@ -144,7 +144,7 @@ export default function UserProfilePage() {
     try {
       const token = await getToken();
       await axios.post(
-        "http://localhost:3000/api/v1/connections/cancelRequest",
+        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/cancelRequest",
         { receiverId: user._id },
         { headers: { Authorization: `Bearer ${token}` } }
       );

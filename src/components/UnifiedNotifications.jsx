@@ -54,7 +54,7 @@ export default function UnifiedNotifications() {
     try {
       const token = await getToken();
       const res = await axios.get(
-        "http://localhost:3000/api/v1/connections/getPendingRequests",
+        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/getPendingRequests",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPendingRequests(res.data.data || []);
@@ -67,7 +67,7 @@ export default function UnifiedNotifications() {
     try {
       const token = await getToken();
       const res = await axios.get(
-        "http://localhost:3000/api/v1/connections/getMyConnections",
+        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/getMyConnections",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const newlyAccepted = (res.data.data || []).filter(
@@ -85,7 +85,7 @@ export default function UnifiedNotifications() {
     try {
       const token = await getToken();
       await axios.post(
-        "http://localhost:3000/api/v1/connections/acceptRequest",
+        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/acceptRequest",
 
         { requesterId },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -116,7 +116,7 @@ export default function UnifiedNotifications() {
       const token = await getToken();
 
       await axios.post(
-        "http://localhost:3000/api/v1/connections/rejectRequest",
+        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/rejectRequest",
 
         { requesterId },
 
@@ -148,7 +148,7 @@ export default function UnifiedNotifications() {
     try {
       const token = await getToken();
       const res = await axios.get(
-        "http://localhost:3000/api/v1/connections/getPendingRequests",
+        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/getPendingRequests",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPendingRequests(res.data.data || []);
@@ -161,7 +161,7 @@ export default function UnifiedNotifications() {
     try {
       const token = await getToken();
       const res = await axios.get(
-        "http://localhost:3000/api/v1/notifications/comments",
+        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/notifications/comments",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       console.log("res.data.notifications", res.data.notifications);

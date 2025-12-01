@@ -167,7 +167,7 @@ export default function Feed() {
       }
 
       const response = await axios.get(
-        `http://localhost:3000/api/v1/getAllPosts?${params.toString()}`,
+        `https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/getAllPosts?${params.toString()}`,
         { headers }
       );
 

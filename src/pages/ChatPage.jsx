@@ -20,7 +20,7 @@ export default function ChatPage() {
   const authAxios = async () => {
     const token = await getToken();
     return axios.create({
-      baseURL: "http://localhost:3000",
+      baseURL: "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app",
       headers: { Authorization: `Bearer ${token}` },
     });
   };
@@ -37,9 +37,12 @@ export default function ChatPage() {
         if (!mounted) return;
         setMeId(myId);
 
-        socketRef.current = io("http://localhost:3000", {
-          query: { userId: myId },
-        });
+        socketRef.current = io(
+          "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app",
+          {
+            query: { userId: myId },
+          }
+        );
 
         socketRef.current.on("connect", () => {
           socketRef.current.emit("join", myId);

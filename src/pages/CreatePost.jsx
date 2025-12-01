@@ -66,13 +66,16 @@ export default function SubmitPage() {
       formData.append("type", type);
       formData.append("tags", activeTags.join(","));
 
-      const response = await fetch("http://localhost:3000/api/v1/createPost", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`, // ✅ correct placement
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/createPost",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ correct placement
+          },
+          body: formData,
+        }
+      );
 
       const data = await response.json();
 
