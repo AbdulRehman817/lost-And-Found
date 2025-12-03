@@ -86,7 +86,7 @@ export default function SubmitPage() {
       }
 
       console.log("✅ Success:", data);
-      navigate("/");
+      navigate("/feed");
       // Reset form after successful post
       setTitle("");
       setDescription("");
