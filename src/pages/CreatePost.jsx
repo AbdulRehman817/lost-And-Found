@@ -42,6 +42,7 @@ export default function SubmitPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState("");
   const [type, setType] = useState("");
   const { getToken } = useAuth();
@@ -52,6 +53,7 @@ export default function SubmitPage() {
   const [activeTags, setActiveTags] = useState([]);
   // const [isAnalyzing, setIsAnalyzing] = useState(false);
   const handleSubmit = async (e) => {
+    setLoading(true);
     e.preventDefault();
     try {
       // ✅ get token inside event handler
@@ -95,6 +97,8 @@ export default function SubmitPage() {
       setActiveTags([]);
     } catch (err) {
       console.error("❌ Failed:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -264,8 +268,13 @@ export default function SubmitPage() {
                 </div>
 
                 <CardFooter className="p-0 pt-4">
-                  <Button type="submit" size="lg" className="w-full">
-                    Submit Item
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full"
+                    disabled={loading}
+                  >
+                    {loading ? "Submitting..." : "Submit Item"}
                   </Button>
                 </CardFooter>
               </form>
