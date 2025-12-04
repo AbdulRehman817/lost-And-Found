@@ -389,7 +389,7 @@ export default function ProfilePage() {
               </TabsContent>
 
               {/* Requests Tab */}
-              <TabsContent value="requests">
+              <TabsContent value="Connections">
                 <RequestsList requests={activeRequests} />
               </TabsContent>
             </div>
