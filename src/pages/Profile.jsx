@@ -59,7 +59,7 @@ export default function ProfilePage() {
   const [postDetails, setPostDetails] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [activeRequests, setActiveRequets] = useState([]);
-  // const [acceptedRequests,setAcceptedRequests]=useState([]);
+
   const fetchAllAcceptedRequets = async () => {
     try {
       const token = await getToken();
@@ -154,7 +154,7 @@ export default function ProfilePage() {
         <div className="container mx-auto px-4 md:px-6">
           <Tabs defaultValue={defaultTab} className="w-full">
             {/* ✅ Tabs Navigation */}
-            <TabsList className="flex w-full flex-wrap justify-center gap-2 bg-background border rounded-lg p-2">
+            <TabsList className="flex w-full flex-wrap justify-center gap-2 bg-card border rounded-lg p-2 shadow-sm">
               <TabsTrigger value="dashboard" className="flex-1 min-w-[140px]">
                 <LayoutGrid className="mr-2 h-4 w-4" /> Dashboard
               </TabsTrigger>
@@ -172,7 +172,7 @@ export default function ProfilePage() {
             <div className="mt-8">
               {/* Dashboard Tab */}
               <TabsContent value="dashboard">
-                <Card className="bg-background">
+                <Card className="bg-card border shadow-sm">
                   <CardHeader>
                     <CardTitle className="font-headline text-3xl">
                       Welcome back, {user?.username || "User"}!
@@ -183,7 +183,7 @@ export default function ProfilePage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Card className="bg-background">
+                      <Card className="bg-card border shadow-sm hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                           <CardTitle className="text-sm font-medium">
                             Total Posts
@@ -200,7 +200,7 @@ export default function ProfilePage() {
                         </CardContent>
                       </Card>
 
-                      <Card className="bg-background">
+                      <Card className="bg-card border shadow-sm hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                           <CardTitle className="text-sm font-medium">
                             Pending Requests
@@ -217,7 +217,7 @@ export default function ProfilePage() {
                         </CardContent>
                       </Card>
 
-                      <Card className="bg-background">
+                      <Card className="bg-card border shadow-sm hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                           <CardTitle className="text-sm font-medium">
                             Items Reunited
@@ -236,7 +236,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="flex justify-start">
-                      <Button className="bg-[#3b82f6]">
+                      <Button className="bg-[#3b82f6] hover:bg-[#3b82f6]/90">
                         <a href="/create" className="flex items-center">
                           <PlusCircle className="mr-2 h-4 w-4" /> Post a New
                           Item
@@ -249,7 +249,7 @@ export default function ProfilePage() {
 
               {/* Profile Tab */}
               <TabsContent value="profile">
-                <Card className="bg-background">
+                <Card className="bg-card border shadow-sm">
                   <CardHeader>
                     <CardTitle className="font-headline flex justify-between items-center text-2xl">
                       <span>User Profile</span>
@@ -273,7 +273,7 @@ export default function ProfilePage() {
                   <CardContent className="space-y-6">
                     <div className="flex flex-col items-center text-center">
                       <div className="relative mb-4">
-                        <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
+                        <Avatar className="h-32 w-32 border-4 border-card shadow-lg">
                           <AvatarImage
                             src={user?.imageUrl}
                             alt={user?.username}
@@ -342,7 +342,10 @@ export default function ProfilePage() {
 
                     {isEditing && (
                       <div className="flex justify-end">
-                        <Button onClick={handleProfileChange}>
+                        <Button
+                          onClick={handleProfileChange}
+                          className="bg-[#3b82f6] hover:bg-[#3b82f6]/90"
+                        >
                           Save Changes
                         </Button>
                       </div>
@@ -353,20 +356,20 @@ export default function ProfilePage() {
 
               {/* Posts Tab */}
               <TabsContent value="posts">
-                <Card className="bg-background">
-                  <CardHeader className="bg-background">
+                <Card className="bg-card border shadow-sm">
+                  <CardHeader>
                     <div className="flex justify-between items-center">
                       <CardTitle className="font-headline text-2xl">
                         Your Posts
                       </CardTitle>
-                      <Button className="bg-[#3b82f6]">
+                      <Button className="bg-[#3b82f6] hover:bg-[#3b82f6]/90">
                         <a href="/create" className="flex items-center">
                           <PlusCircle className="mr-2 h-4 w-4" /> Post New Item
                         </a>
                       </Button>
                     </div>
                   </CardHeader>
-                  <CardContent className="bg-background">
+                  <CardContent>
                     {postDetails.length > 0 ? (
                       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                         {postDetails.map((item) => (
@@ -374,12 +377,12 @@ export default function ProfilePage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-12 text-black border-2 border-dashed rounded-lg flex flex-col items-center gap-4">
+                      <div className="text-center py-12 border-2 border-dashed rounded-lg flex flex-col items-center gap-4 bg-muted/30">
                         <FileText className="h-10 w-10 text-muted-foreground" />
                         <p className="font-semibold">
                           You haven't posted any items yet.
                         </p>
-                        <Button>
+                        <Button className="bg-[#3b82f6] hover:bg-[#3b82f6]/90">
                           <a href="/create">Post an Item</a>
                         </Button>
                       </div>
@@ -388,7 +391,7 @@ export default function ProfilePage() {
                 </Card>
               </TabsContent>
 
-              {/* Requests Tab */}
+              {/* Connections Tab */}
               <TabsContent value="Connections">
                 <RequestsList requests={activeRequests} />
               </TabsContent>
