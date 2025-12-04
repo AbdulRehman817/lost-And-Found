@@ -154,17 +154,17 @@ export default function ProfilePage() {
         <div className="container mx-auto px-4 md:px-6">
           <Tabs defaultValue={defaultTab} className="w-full">
             {/* ✅ Tabs Navigation */}
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 bg-background border rounded-lg">
-              <TabsTrigger value="dashboard">
+            <TabsList className="flex w-full flex-wrap justify-center gap-2 bg-background border rounded-lg p-2">
+              <TabsTrigger value="dashboard" className="flex-1 min-w-[140px]">
                 <LayoutGrid className="mr-2 h-4 w-4" /> Dashboard
               </TabsTrigger>
-              <TabsTrigger value="posts">
+              <TabsTrigger value="posts" className="flex-1 min-w-[140px]">
                 <FileText className="mr-2 h-4 w-4" /> My Posts
               </TabsTrigger>
-              <TabsTrigger value="requests">
+              <TabsTrigger value="requests" className="flex-1 min-w-[140px]">
                 <Inbox className="mr-2 h-4 w-4" /> Requests
               </TabsTrigger>
-              <TabsTrigger value="profile">
+              <TabsTrigger value="profile" className="flex-1 min-w-[140px]">
                 <User className="mr-2 h-4 w-4" /> My Profile
               </TabsTrigger>
             </TabsList>
