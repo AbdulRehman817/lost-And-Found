@@ -161,11 +161,11 @@ export default function ProfilePage() {
               <TabsTrigger value="posts" className="flex-1 min-w-[140px]">
                 <FileText className="mr-2 h-4 w-4" /> My Posts
               </TabsTrigger>
-              <TabsTrigger value="requests" className="flex-1 min-w-[140px]">
-                <Inbox className="mr-2 h-4 w-4" /> Requests
+              <TabsTrigger value="Connections" className="flex-1 min-w-[140px]">
+                <Inbox className="mr-2 h-4 w-4" /> Connections
               </TabsTrigger>
               <TabsTrigger value="profile" className="flex-1 min-w-[140px]">
-                <User className="mr-2 h-4 w-4" /> My Profile
+                <User className="mr-2 h-4 w-4" /> Profile
               </TabsTrigger>
             </TabsList>
 
