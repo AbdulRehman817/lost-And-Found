@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useSignUp } from "@clerk/clerk-react";
+import { useSignUp, useAuth } from "@clerk/clerk-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import {
@@ -17,6 +17,7 @@ import { Mail, Lock, User, Upload, X } from "lucide-react";
 
 export default function SignUp() {
   const { isLoaded, signUp, setActive } = useSignUp();
+  const { getToken } = useAuth();
   const navigate = useNavigate();
 
   const [profileImage, setProfileImage] = useState(null);
@@ -128,7 +129,7 @@ export default function SignUp() {
       await setActive({ session: completeSignUp.createdSessionId });
 
       // Wait for the session to be fully active
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Upload profile image to Clerk if provided
       if (profileImage) {
@@ -153,9 +154,34 @@ export default function SignUp() {
         }
       }
 
-      // The backend will automatically sync the user to MongoDB
-      // when they make their first authenticated request
-      // No need to manually call the backend here
+      // Get Clerk authentication token
+      const token = await getToken();
+
+      if (!token) {
+        console.warn("No token available, user may not sync to MongoDB");
+      } else {
+        // Sync user to MongoDB by calling the backend
+        try {
+          const response = await fetch("http://localhost:3000/api/v1/profile", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log("✅ User synced to MongoDB successfully:", data);
+          } else {
+            const errorText = await response.text();
+            console.warn("⚠️ Failed to sync user to MongoDB:", errorText);
+          }
+        } catch (syncErr) {
+          console.error("❌ MongoDB sync error:", syncErr);
+          // Don't block navigation if sync fails
+        }
+      }
 
       // Navigate to home page
       navigate("/");
