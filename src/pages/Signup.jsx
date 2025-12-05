@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useSignUp, useUser, useAuth } from "@clerk/clerk-react";
+import React, { useState } from "react";
+import { useSignUp } from "@clerk/clerk-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import {
@@ -17,8 +17,6 @@ import { Mail, Lock, User, Upload, X } from "lucide-react";
 
 export default function SignUp() {
   const { isLoaded, signUp, setActive } = useSignUp();
-  const { getToken } = useAuth();
-  const { user } = useUser(); // Current user after session is active
   const navigate = useNavigate();
 
   const [profileImage, setProfileImage] = useState(null);
@@ -30,7 +28,8 @@ export default function SignUp() {
 
   const form = useForm({
     defaultValues: {
-      username: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -57,7 +56,7 @@ export default function SignUp() {
     setImagePreview(null);
   };
 
-  // Step 1: Create account
+  // Step 1: Create account in Clerk
   const onSubmit = async (values) => {
     if (!isLoaded) return;
     setError("");
@@ -76,68 +75,126 @@ export default function SignUp() {
     }
 
     try {
+      // Create the sign up with first name, last name, email, and password
       await signUp.create({
-        username: values.username,
+        firstName: values.firstName,
+        lastName: values.lastName,
         emailAddress: values.email,
         password: values.password,
       });
 
       // Prepare email verification
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      await signUp.prepareEmailAddressVerification({
+        strategy: "email_code",
+      });
+
       setPendingVerification(true);
+      setError("");
     } catch (err) {
-      console.error(err);
-      setError(
-        err?.errors?.[0]?.message || "Sign-up failed. Please try again."
-      );
+      console.error("Sign-up error:", err);
+      const errorMessage =
+        err?.errors?.[0]?.message ||
+        err?.errors?.[0]?.longMessage ||
+        "Sign-up failed. Please try again.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  // Step 2: Verify email & set profile image
+  // Step 2: Verify email and complete sign up
   const onVerify = async () => {
+    if (!isLoaded || !code || code.length !== 6) {
+      setError("Please enter a valid 6-digit code");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      // Verify the email with the code
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code: code.trim(),
+      });
+
+      if (completeSignUp.status !== "complete") {
+        throw new Error("Verification incomplete");
+      }
+
+      if (!completeSignUp.createdSessionId) {
+        throw new Error("Session creation failed");
+      }
+
+      // Activate the session
+      await setActive({ session: completeSignUp.createdSessionId });
+
+      // Wait for the session to be fully active
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Upload profile image to Clerk if provided
+      if (profileImage) {
+        try {
+          // Convert image to base64
+          const base64Image = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(profileImage);
+          });
+
+          // Update Clerk user with profile image
+          await signUp.update({
+            profileImageUrl: base64Image,
+          });
+
+          console.log("Profile image uploaded to Clerk successfully");
+        } catch (imgErr) {
+          console.error("Image upload error:", imgErr);
+          // Don't block the flow if image upload fails
+        }
+      }
+
+      // The backend will automatically sync the user to MongoDB
+      // when they make their first authenticated request
+      // No need to manually call the backend here
+
+      // Navigate to home page
+      navigate("/");
+    } catch (err) {
+      console.error("Verification error:", err);
+
+      // Extract error message
+      if (err?.errors && err.errors.length > 0) {
+        const errorMessage =
+          err.errors[0]?.message ||
+          err.errors[0]?.longMessage ||
+          "Invalid verification code";
+        setError(errorMessage);
+      } else if (err?.message) {
+        setError(err.message);
+      } else {
+        setError("Invalid or expired verification code. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resend verification code
+  const resendCode = async () => {
     if (!isLoaded) return;
     setLoading(true);
     setError("");
 
     try {
-      const attempt = await signUp.attemptEmailAddressVerification({ code });
-
-      if (attempt.status === "complete") {
-        // Activate session
-        await setActive({ session: attempt.createdSessionId });
-
-        // Wait for Clerk to fully register the user
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Upload profile image
-        if (profileImage && user) {
-          try {
-            await user.update({ profileImage });
-            console.log("Profile image uploaded successfully");
-          } catch (imgErr) {
-            console.error("Image upload failed:", imgErr);
-          }
-        }
-
-        // Get Clerk token
-        const token = await getToken();
-        if (token) {
-          localStorage.setItem("token", token);
-
-          // Sync with backend
-          await fetch("http://localhost:3000/api/v1/profile", {
-            method: "GET",
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
-
-        navigate("/"); // Redirect to homepage
-      }
+      await signUp.prepareEmailAddressVerification({
+        strategy: "email_code",
+      });
+      setCode("");
     } catch (err) {
-      console.error(err);
-      setError("Invalid verification code. Please try again.");
+      console.error("Resend error:", err);
+      setError("Failed to resend code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -173,20 +230,55 @@ export default function SignUp() {
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-4"
                 >
-                  {/* Username */}
+                  {/* First Name */}
                   <FormField
                     control={form.control}
-                    name="username"
-                    rules={{ required: "Username is required" }}
+                    name="firstName"
+                    rules={{
+                      required: "First name is required",
+                      minLength: {
+                        value: 2,
+                        message: "First name must be at least 2 characters",
+                      },
+                    }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>First Name</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                               {...field}
-                              placeholder="johndoe"
+                              placeholder="John"
+                              className="pl-10"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Last Name */}
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    rules={{
+                      required: "Last name is required",
+                      minLength: {
+                        value: 2,
+                        message: "Last name must be at least 2 characters",
+                      },
+                    }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              {...field}
+                              placeholder="Doe"
                               className="pl-10"
                             />
                           </div>
@@ -198,7 +290,9 @@ export default function SignUp() {
 
                   {/* Profile Image */}
                   <div className="space-y-2">
-                    <label>Profile Image (Optional)</label>
+                    <label className="text-sm font-medium">
+                      Profile Image (Optional)
+                    </label>
                     <div className="flex items-center gap-4">
                       {imagePreview ? (
                         <div className="relative">
@@ -210,7 +304,7 @@ export default function SignUp() {
                           <button
                             type="button"
                             onClick={removeImage}
-                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1"
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -227,13 +321,22 @@ export default function SignUp() {
                         className="cursor-pointer flex-1"
                       />
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Max size: 5MB. Supported formats: JPG, PNG, GIF
+                    </p>
                   </div>
 
                   {/* Email */}
                   <FormField
                     control={form.control}
                     name="email"
-                    rules={{ required: "Email is required" }}
+                    rules={{
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Invalid email address",
+                      },
+                    }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Email</FormLabel>
@@ -257,7 +360,13 @@ export default function SignUp() {
                   <FormField
                     control={form.control}
                     name="password"
-                    rules={{ required: "Password is required", minLength: 8 }}
+                    rules={{
+                      required: "Password is required",
+                      minLength: {
+                        value: 8,
+                        message: "Password must be at least 8 characters",
+                      },
+                    }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Password</FormLabel>
@@ -281,7 +390,12 @@ export default function SignUp() {
                   <FormField
                     control={form.control}
                     name="confirmPassword"
-                    rules={{ required: "Please confirm password" }}
+                    rules={{
+                      required: "Please confirm password",
+                      validate: (value) =>
+                        value === form.getValues("password") ||
+                        "Passwords do not match",
+                    }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
@@ -324,30 +438,66 @@ export default function SignUp() {
           ) : (
             // Verification step
             <div className="space-y-4">
-              <p className="text-center text-sm text-muted-foreground">
-                Enter the verification code sent to your email
-              </p>
-              <Input
-                placeholder="6-digit code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className="text-center text-2xl tracking-widest mt-2"
-                maxLength={6}
-              />
+              <div className="text-center mb-4">
+                <p className="text-sm text-muted-foreground mb-2">
+                  We've sent a verification code to
+                </p>
+                <p className="font-medium text-foreground">
+                  {form.getValues("email")}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Verification Code</label>
+                <Input
+                  placeholder="000000"
+                  value={code}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    setCode(value);
+                    if (error) setError("");
+                  }}
+                  className="text-center text-2xl tracking-widest"
+                  maxLength={6}
+                  autoFocus
+                />
+              </div>
+
               <Button
-                className="w-full bg-[#3b82f6]/90 h-11"
+                className="w-full bg-[#3b82f6] hover:bg-[#3b82f6]/90 h-11"
                 onClick={onVerify}
                 disabled={loading || code.length !== 6}
               >
                 {loading ? "Verifying..." : "Verify Email"}
               </Button>
-              <Button
-                variant="ghost"
-                className="w-full"
-                onClick={() => setPendingVerification(false)}
-              >
-                Back to sign up
-              </Button>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={resendCode}
+                  disabled={loading}
+                >
+                  Resend Code
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex-1"
+                  onClick={() => {
+                    setPendingVerification(false);
+                    setCode("");
+                    setError("");
+                  }}
+                  disabled={loading}
+                >
+                  Back
+                </Button>
+              </div>
+
+              <p className="text-xs text-center text-muted-foreground mt-4">
+                Didn't receive the code? Check your spam folder or click Resend
+                Code
+              </p>
             </div>
           )}
         </div>
