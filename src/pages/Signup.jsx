@@ -28,8 +28,7 @@ export default function SignUp() {
 
   const form = useForm({
     defaultValues: {
-      firstName: "",
-      lastName: "",
+      username: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -75,10 +74,9 @@ export default function SignUp() {
     }
 
     try {
-      // Create the sign up with first name, last name, email, and password
+      // Create the sign up with username, email, and password
       await signUp.create({
-        firstName: values.firstName,
-        lastName: values.lastName,
+        username: values.username,
         emailAddress: values.email,
         password: values.password,
       });
@@ -201,7 +199,7 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex mx-auto items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8 mt-8">
@@ -230,55 +228,26 @@ export default function SignUp() {
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-4"
                 >
-                  {/* First Name */}
+                  {/* Username */}
                   <FormField
                     control={form.control}
-                    name="firstName"
+                    name="username"
                     rules={{
-                      required: "First name is required",
+                      required: "Username is required",
                       minLength: {
-                        value: 2,
-                        message: "First name must be at least 2 characters",
+                        value: 3,
+                        message: "Username must be at least 3 characters",
                       },
                     }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Name</FormLabel>
+                        <FormLabel>Username</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                               {...field}
-                              placeholder="John"
-                              className="pl-10"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Last Name */}
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    rules={{
-                      required: "Last name is required",
-                      minLength: {
-                        value: 2,
-                        message: "Last name must be at least 2 characters",
-                      },
-                    }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last Name</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              {...field}
-                              placeholder="Doe"
+                              placeholder="johndoe"
                               className="pl-10"
                             />
                           </div>
@@ -290,9 +259,7 @@ export default function SignUp() {
 
                   {/* Profile Image */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Profile Image (Optional)
-                    </label>
+                    <label className="text-sm font-medium">Profile Image</label>
                     <div className="flex items-center gap-4">
                       {imagePreview ? (
                         <div className="relative">
