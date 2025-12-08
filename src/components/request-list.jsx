@@ -26,7 +26,7 @@ export default function RequestsList() {
     try {
       const token = await getToken();
       const res = await axios.get(
-        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/getAcceptedRequests",
+        "http://localhost:3000/api/v1/connections/getAcceptedRequests",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const allRequests = res.data.data || [];

@@ -104,7 +104,7 @@ export default function ConnectionNotifications() {
     try {
       const token = await getToken();
       const res = await axios.get(
-        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/getPendingRequests",
+        "http://localhost:3000/api/v1/connections/getPendingRequests",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPendingRequests(res.data.data || []);
@@ -117,7 +117,7 @@ export default function ConnectionNotifications() {
     try {
       const token = await getToken();
       const res = await axios.get(
-        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/getMyConnections",
+        "http://localhost:3000/api/v1/connections/getMyConnections",
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -140,7 +140,7 @@ export default function ConnectionNotifications() {
     try {
       const token = await getToken();
       await axios.post(
-        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/acceptRequest",
+        "http://localhost:3000/api/v1/connections/acceptRequest",
         { requesterId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -169,7 +169,7 @@ export default function ConnectionNotifications() {
     try {
       const token = await getToken();
       await axios.post(
-        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/rejectRequest",
+        "http://localhost:3000/api/v1/connections/rejectRequest",
         { requesterId },
         { headers: { Authorization: `Bearer ${token}` } }
       );

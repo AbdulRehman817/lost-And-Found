@@ -64,7 +64,7 @@ export default function ProfilePage() {
     try {
       const token = await getToken();
       const res = await axios.get(
-        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/getAcceptedRequests",
+        "http://localhost:3000/api/v1/connections/getAcceptedRequests",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -81,7 +81,7 @@ export default function ProfilePage() {
     try {
       const token = await getToken();
       const response = await axios.get(
-        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/connections/getPendingRequests",
+        "http://localhost:3000/api/v1/connections/getPendingRequests",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -101,7 +101,7 @@ export default function ProfilePage() {
     try {
       const token = await getToken();
       const response = await axios.get(
-        `https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/getUserPosts`,
+        `http://localhost:3000/api/v1/getUserPosts`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -132,14 +132,11 @@ export default function ProfilePage() {
   // ✅ Update profile
   const handleProfileChange = async () => {
     try {
-      await fetch(
-        "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/profile",
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ bio, phone }),
-        }
-      );
+      await fetch("http://localhost:3000/api/v1/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bio, phone }),
+      });
       alert("✅ Profile updated!");
     } catch (err) {
       console.error("Error updating profile:", err);
