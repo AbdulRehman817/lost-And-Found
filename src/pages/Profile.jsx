@@ -131,24 +131,15 @@ export default function ProfilePage() {
     }
   }, [id, isSignedIn]);
 
-  // ✅ Update profile in both Clerk and MongoDB
+  // ✅ Update profile - Backend handles Clerk metadata update
   const handleProfileChange = async () => {
     if (!user) return;
 
     setIsSaving(true);
     try {
-      // 1. Update Clerk public metadata
-      await user.update({
-        publicMetadata: {
-          ...user.publicMetadata,
-          bio: bio,
-          phone: phone,
-        },
-      });
-
-      // 2. Update MongoDB
+      // Send to your backend - backend will update both MongoDB and Clerk
       const token = await getToken();
-      await axios.put(
+      const response = await axios.put(
         "https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/profile",
         { bio, phone },
         {
@@ -159,7 +150,7 @@ export default function ProfilePage() {
         }
       );
 
-      // 3. Reload user data to reflect changes immediately
+      // Reload user data to reflect changes from Clerk
       await user.reload();
 
       alert("✅ Profile updated successfully!");
