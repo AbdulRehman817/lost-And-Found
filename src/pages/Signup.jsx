@@ -160,14 +160,15 @@ export default function SignUp() {
 
         // Wait for Clerk to fully register the user
 
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // Upload profile image
 
-        if (profileImage && user) {
+        if (profileImage) {
           try {
-            await user.update({ profileImage });
-
+            const currentUser = attempt.createdUserId;
+            (await attempt.createdSessionId) &&
+              user?.setProfileImage({ file: profileImage });
             console.log("Profile image uploaded successfully");
           } catch (imgErr) {
             console.error("Image upload failed:", imgErr);
@@ -197,8 +198,23 @@ export default function SignUp() {
     }
   };
 
+  useEffect(() => {
+    const uploadImageAfterSignup = async () => {
+      if (user && profileImage && !user.hasImage) {
+        try {
+          await user.setProfileImage({ file: profileImage });
+          console.log("Profile image uploaded successfully");
+        } catch (err) {
+          console.error("Failed to upload profile image:", err);
+        }
+      }
+    };
+
+    uploadImageAfterSignup();
+  }, [user, profileImage]);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex items-center mx-auto w-full justify-center bg-background px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
 
