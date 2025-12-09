@@ -103,10 +103,7 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" className="h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10 object-cover">
-                  <AvatarImage
-                    src={user?.imageUrl}
-                    className="object-coverupdated "
-                  />
+                  <AvatarImage src={user?.imageUrl} className="object-cover" />
                   <AvatarFallback>
                     {user?.firstName?.[0]?.toUpperCase() || "?"}
                   </AvatarFallback>

@@ -47,7 +47,14 @@ export default function Layout() {
           <Route path="/feed/:id" element={<PostDetails />} />
 
           {/* ✅ fixed param name to match useParams in UserProfilePage */}
-          <Route path="/profile/:userId" element={<UserProfilePage />} />
+          <Route
+            path="/profile/:userId"
+            element={
+              <AuthGuard>
+                <UserProfilePage />
+              </AuthGuard>
+            }
+          />
 
           <Route path="/about" element={<AboutPage />} />
 

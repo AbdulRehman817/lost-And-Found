@@ -293,6 +293,7 @@ export default function ProfilePage() {
                         <Avatar className="h-32 w-32 border-4 border-card shadow-lg">
                           <AvatarImage
                             src={user?.imageUrl}
+                            className="object-cover"
                             alt={user?.username}
                           />
                           <AvatarFallback>
