@@ -26,7 +26,7 @@ export default function RequestsList() {
     try {
       const token = await getToken();
       const res = await axios.get(
-        "http://localhost:3000/api/v1/connections/getAcceptedRequests",
+        "https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/connections/getAcceptedRequests",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const allRequests = res.data.data || [];

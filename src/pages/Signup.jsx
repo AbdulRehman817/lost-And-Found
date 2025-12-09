@@ -177,11 +177,14 @@ export default function SignUp() {
 
         if (token) {
           localStorage.setItem("token", token);
-          await fetch("http://localhost:3000/api/v1/profile", {
-            method: "GET",
+          await fetch(
+            "https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/profile",
+            {
+              method: "GET",
 
-            headers: { Authorization: `Bearer ${token}` },
-          });
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
         }
         navigate("/");
       }

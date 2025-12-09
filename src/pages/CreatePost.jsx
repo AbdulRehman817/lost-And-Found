@@ -69,7 +69,7 @@ export default function SubmitPage() {
       formData.append("tags", activeTags.join(","));
 
       const response = await fetch(
-        "http://localhost:3000/api/v1/createPost",
+        "https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/createPost",
         {
           method: "POST",
           headers: {

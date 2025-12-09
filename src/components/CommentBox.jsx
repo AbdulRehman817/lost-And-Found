@@ -20,7 +20,7 @@ export default function CommentBox() {
     try {
       const token = await getToken();
       const response = await axios.get(
-        `https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/posts/${id}/comments`,
+        `https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/posts/${id}/comments`,
         {
           headers: {
             //! my comments were not working because  i forgot to add authorization bearer token
@@ -42,7 +42,7 @@ export default function CommentBox() {
     try {
       const token = await getToken();
       const response = await axios.post(
-        `https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/posts/${id}/comments`,
+        `https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/posts/${id}/comments`,
         {
           message: newComment,
           parentId: null,
@@ -74,7 +74,7 @@ export default function CommentBox() {
     try {
       const token = await getToken();
       const response = await axios.post(
-        `https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app/api/v1/posts/${id}/comments`,
+        `https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/posts/${id}/comments`,
         {
           message: replyText,
           parentId: parentCommentId,

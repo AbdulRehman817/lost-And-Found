@@ -37,7 +37,7 @@ export default function PostDetails() {
     const fetchPost = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3000/api/v1/feed/${id}`
+          `https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/feed/${id}`
         );
         const data = response.data.data;
 
