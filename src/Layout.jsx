@@ -51,7 +51,9 @@ export default function Layout() {
             path="/profile/:userId"
             element={
               <AuthGuard>
-                <UserProfilePage />
+                <Header>
+                  <UserProfilePage />
+                </Header>
               </AuthGuard>
             }
           />
@@ -79,7 +81,9 @@ export default function Layout() {
             path="/chat"
             element={
               <AuthGuard>
-                <ChatPage />
+                <Header>
+                  <ChatPage />
+                </Header>
               </AuthGuard>
             }
           />
