@@ -40,7 +40,7 @@ export default function PostDetails() {
           `https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/feed/${id}`
         );
         const data = response.data.data;
-
+        console.log("postDescription", data);
         setPost({
           id: data?._id,
           _id: data?._id,

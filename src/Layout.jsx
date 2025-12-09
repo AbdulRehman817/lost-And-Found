@@ -6,7 +6,7 @@ import AuthGuard from "./pages/AuthGuard";
 
 import Home from "./pages/Home";
 import Feed from "./pages/Feed";
-import { Header } from "./components/Header";
+
 import PostDetails from "./pages/PostDetails";
 import CreatePost from "./pages/CreatePost";
 import ProfilePage from "./pages/Profile";
@@ -51,9 +51,7 @@ export default function Layout() {
             path="/profile/:userId"
             element={
               <AuthGuard>
-                <Header>
-                  <UserProfilePage />
-                </Header>
+                <UserProfilePage />
               </AuthGuard>
             }
           />
@@ -81,9 +79,7 @@ export default function Layout() {
             path="/chat"
             element={
               <AuthGuard>
-                <Header>
-                  <ChatPage />
-                </Header>
+                <ChatPage />
               </AuthGuard>
             }
           />
