@@ -163,6 +163,7 @@ export default function CommentBox() {
                   <Avatar className="w-10 h-10 ring-2 ring-gray-800/50">
                     <AvatarImage
                       src={comment.userId?.profileImage || ""}
+                      className="object-cover"
                       alt={comment.userId?.name || "User"}
                     />
                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">

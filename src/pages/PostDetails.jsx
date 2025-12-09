@@ -59,6 +59,7 @@ export default function PostDetails() {
             avatar: data?.userId?.avatar || "https://picsum.photos/seed/10/200",
             email: data?.userId?.email || "",
             phone: data?.userId?.phone || "",
+            imageUrl: data?.userId?.profileImage,
           },
         });
       } catch (error) {
@@ -163,7 +164,8 @@ export default function PostDetails() {
                     <div className="flex items-center gap-4">
                       <Avatar className="w-12 h-12">
                         <AvatarImage
-                          src={post.poster.avatar}
+                          src={post.poster.imageUrl}
+                          className="object-cover"
                           alt={post.poster.name}
                         />
                         <AvatarFallback>

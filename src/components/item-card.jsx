@@ -33,7 +33,11 @@ export function ItemCard({
       {/* Header */}
       <CardHeader className="flex flex-row items-center gap-3 p-4">
         <Avatar className="h-10 w-10 border">
-          <AvatarImage src={userId?.profileImage} alt={userId?.name} />
+          <AvatarImage
+            src={userId?.profileImage}
+            alt={userId?.name}
+            className="object-cover"
+          />
           <AvatarFallback>
             {userId?.name?.charAt(0).toUpperCase() || "U"}
           </AvatarFallback>
