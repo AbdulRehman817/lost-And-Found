@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { Button } from "../components/ui/button";
-import { Lock } from "lucide-react";
+import { Lock, Mail, Phone, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 export default function UserProfilePage() {
   const { userId } = useParams();
   const [user, setUser] = useState(null);
@@ -12,18 +13,20 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const { getToken } = useAuth();
   const navigate = useNavigate();
+
   // Connection state
   const [isConnected, setIsConnected] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [amRequester, setAmRequester] = useState(false);
   const [connectionCounts, setConnectionCounts] = useState(null);
+
   // Modal and message
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     const fetchConnectionCounts = async () => {
-      if (!userId) return; // Profile user ID
+      if (!userId) return;
 
       try {
         const token = await getToken();
@@ -34,11 +37,9 @@ export default function UserProfilePage() {
           { headers }
         );
 
-        // console.log("User connection counts:", res.data.data);
         setConnectionCounts(res.data.data);
       } catch (err) {
         console.error("Error fetching connection counts:", err);
-        // setConnectionCounts(null);
       }
     };
 
@@ -78,9 +79,6 @@ export default function UserProfilePage() {
 
         // Fetch connection status first
         await fetchConnectionStatus(userRes.data.user._id);
-
-        // Only fetch posts if connected
-        // Note: We'll fetch after connection status is determined
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -128,7 +126,6 @@ export default function UserProfilePage() {
         }
       );
 
-      // Update UI immediately
       setIsPending(true);
       setAmRequester(true);
       setShowModal(false);
@@ -149,7 +146,6 @@ export default function UserProfilePage() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Update UI immediately
       setIsPending(false);
       setAmRequester(false);
     } catch (err) {
@@ -158,20 +154,20 @@ export default function UserProfilePage() {
     }
   };
 
-  // Poll for connection status updates (optional - for real-time feel)
+  // Poll for connection status updates
   useEffect(() => {
     if (!user?._id || !isPending) return;
 
     const interval = setInterval(async () => {
       await fetchConnectionStatus(user._id);
-    }, 3000); // Check every 3 seconds
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [user?._id, isPending]);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center mx-auto">
+      <div className="flex justify-center items-center mx-auto min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
@@ -239,10 +235,52 @@ export default function UserProfilePage() {
         </div>
       </div>
 
-      {/* About */}
+      {/* Bio Section - Always visible */}
+      {user.bio && (
+        <div className="mt-8 px-8">
+          <div className="bg-muted/40 shadow-md rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <FileText className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-xl font-semibold text-foreground">About</h2>
+            </div>
+            <p className="text-muted-foreground leading-relaxed">{user.bio}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Info - Only visible if connected */}
+      {isConnected && (user.phone || user.email) && (
+        <div className="mt-6 px-8">
+          <div className="bg-muted/40 shadow-md rounded-xl p-6">
+            <h2 className="text-xl font-semibold text-foreground mb-4">
+              Contact Information
+            </h2>
+            <div className="space-y-3">
+              {user.email && (
+                <div className="flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Email</p>
+                    <p className="text-foreground">{user.email}</p>
+                  </div>
+                </div>
+              )}
+              {user.phone && (
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Phone</p>
+                    <p className="text-foreground">{user.phone}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
-      <div className="mt-10 px-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="mt-8 px-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="bg-muted/40 shadow-md rounded-xl p-6 text-center">
           <h3 className="text-3xl font-bold text-foreground">
             {connectionCounts?.acceptedCount || 0}
@@ -267,11 +305,12 @@ export default function UserProfilePage() {
             posts.length > 0 ? (
               <ul className="mt-4 space-y-4">
                 {posts.map((post) => (
-                  <Link to={`/feed/${post._id}`} className="group block">
-                    <li
-                      key={post._id}
-                      className="p-4 border rounded-lg shadow hover:shadow-md transition bg-card"
-                    >
+                  <Link
+                    to={`/feed/${post._id}`}
+                    className="group block"
+                    key={post._id}
+                  >
+                    <li className="p-4 border rounded-lg shadow hover:shadow-md transition bg-card">
                       {post.imageUrl && (
                         <img
                           src={post.imageUrl}

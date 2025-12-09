@@ -40,7 +40,6 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import axios from "axios";
 
-// ✅ Example stats (replace with backend if needed)
 const userStats = {
   posts: 3,
   activeRequests: 2,
@@ -54,11 +53,20 @@ export default function ProfilePage() {
   const { id } = useParams();
   const { getToken } = useAuth();
 
-  const [bio, setBio] = useState(user?.publicMetadata?.bio || "");
-  const [phone, setPhone] = useState(user?.publicMetadata?.phone || "");
+  const [bio, setBio] = useState("");
+  const [phone, setPhone] = useState("");
   const [postDetails, setPostDetails] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [activeRequests, setActiveRequets] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Initialize bio and phone from user metadata
+  useEffect(() => {
+    if (user) {
+      setBio(user.publicMetadata?.bio || "");
+      setPhone(user.publicMetadata?.phone || "");
+    }
+  }, [user]);
 
   const fetchAllAcceptedRequets = async () => {
     try {
@@ -96,7 +104,6 @@ export default function ProfilePage() {
     }
   };
 
-  // ✅ Fetch logged-in user posts
   const getAllUserPosts = async () => {
     try {
       const token = await getToken();
@@ -121,29 +128,47 @@ export default function ProfilePage() {
       getAllUserPosts();
       getAllPendingRequests();
       fetchAllAcceptedRequets();
-      userProfile();
     }
   }, [id, isSignedIn]);
 
-  const userProfile = async () => {
-    console.log("userData", user);
-  };
-
-  // ✅ Update profile
+  // ✅ Update profile in both Clerk and MongoDB
   const handleProfileChange = async () => {
+    if (!user) return;
+
+    setIsSaving(true);
     try {
-      await fetch(
+      // 1. Update Clerk public metadata
+      await user.update({
+        publicMetadata: {
+          ...user.publicMetadata,
+          bio: bio,
+          phone: phone,
+        },
+      });
+
+      // 2. Update MongoDB
+      const token = await getToken();
+      await axios.put(
         "https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/profile",
+        { bio, phone },
         {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ bio, phone }),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
       );
-      alert("✅ Profile updated!");
+
+      // 3. Reload user data to reflect changes immediately
+      await user.reload();
+
+      alert("✅ Profile updated successfully!");
+      setIsEditing(false);
     } catch (err) {
       console.error("Error updating profile:", err);
-      alert("❌ Failed to update profile");
+      alert("❌ Failed to update profile. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -256,6 +281,7 @@ export default function ProfilePage() {
                       <Button
                         variant={isEditing ? "default" : "outline"}
                         onClick={() => setIsEditing(!isEditing)}
+                        disabled={isSaving}
                       >
                         {isEditing ? (
                           "Cancel"
@@ -288,6 +314,7 @@ export default function ProfilePage() {
                           name="name"
                           value={user?.username}
                           className="text-2xl font-bold font-headline text-center max-w-sm mx-auto"
+                          readOnly
                         />
                       ) : (
                         <h2 className="font-headline text-3xl font-bold">
@@ -323,6 +350,7 @@ export default function ProfilePage() {
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           readOnly={!isEditing}
+                          placeholder="Enter your phone number"
                         />
                       </div>
                     </div>
@@ -337,6 +365,7 @@ export default function ProfilePage() {
                         onChange={(e) => setBio(e.target.value)}
                         className="min-h-[100px]"
                         readOnly={!isEditing}
+                        placeholder="Tell us about yourself..."
                       />
                     </div>
 
@@ -345,8 +374,9 @@ export default function ProfilePage() {
                         <Button
                           onClick={handleProfileChange}
                           className="bg-[#3b82f6] hover:bg-[#3b82f6]/90"
+                          disabled={isSaving}
                         >
-                          Save Changes
+                          {isSaving ? "Saving..." : "Save Changes"}
                         </Button>
                       </div>
                     )}
