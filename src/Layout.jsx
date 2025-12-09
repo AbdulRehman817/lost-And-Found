@@ -6,7 +6,7 @@ import AuthGuard from "./pages/AuthGuard";
 
 import Home from "./pages/Home";
 import Feed from "./pages/Feed";
-import Header from "./components/Header";
+import { Header } from "./components/Header";
 import PostDetails from "./pages/PostDetails";
 import CreatePost from "./pages/CreatePost";
 import ProfilePage from "./pages/Profile";
