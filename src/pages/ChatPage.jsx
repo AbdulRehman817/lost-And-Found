@@ -190,7 +190,7 @@ export default function ChatPage() {
                 <img
                   src={selected.profileImage || "/default-avatar.png"}
                   alt={selected.name}
-                  className="w-10 h-10 rounded-full"
+                  className="w-10 h-10 rounded-full object-cover"
                 />
                 <div>
                   <div className="font-semibold">{selected.name}</div>

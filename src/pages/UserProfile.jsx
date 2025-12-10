@@ -169,7 +169,6 @@ export default function UserProfilePage() {
   if (loading) {
     return (
       <>
-        <Header />
         <div className="flex justify-center items-center py-20 mx-auto ">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
