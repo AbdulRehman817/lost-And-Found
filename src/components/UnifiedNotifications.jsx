@@ -226,7 +226,10 @@ export default function UnifiedNotifications() {
           <div key={req._id} className="px-2 py-3 hover:bg-muted/50 rounded-md">
             <div className="flex items-start gap-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={req.requesterId?.profileImage} />
+                <AvatarImage
+                  src={req.requesterId?.profileImage}
+                  className="object-cover"
+                />
                 <AvatarFallback>
                   {req.requesterId?.name?.[0] || "U"}
                 </AvatarFallback>
@@ -274,7 +277,10 @@ export default function UnifiedNotifications() {
           >
             <div className="flex items-start gap-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={notif.otherUser?.profileImage} />
+                <AvatarImage
+                  src={notif.otherUser?.profileImage}
+                  className="object-cover"
+                />
                 <AvatarFallback>
                   {notif.otherUser?.name?.[0] || "U"}
                 </AvatarFallback>
