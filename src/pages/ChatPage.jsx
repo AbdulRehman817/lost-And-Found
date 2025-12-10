@@ -1,281 +1,436 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { Link, Navigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
-import { Header } from "../components/Header";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { MessageCircle, Send, Search } from "lucide-react";
+import { Lock, Mail, Phone, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Header } from "../components/Header";
 
-export default function ChatPage() {
-  const { userId: paramUserId } = useParams();
+export default function UserProfilePage() {
+  const { userId } = useParams();
+  const [user, setUser] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { getToken } = useAuth();
-  const { user: currentUser } = useUser();
   const navigate = useNavigate();
 
-  const [connectedUsers, setConnectedUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
+  // Connection state
+  const [isConnected, setIsConnected] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const [amRequester, setAmRequester] = useState(false);
+  const [connectionCounts, setConnectionCounts] = useState(null);
 
-  // Fetch connected users
+  // Modal and message
+  const [showModal, setShowModal] = useState(false);
+  const [message, setMessage] = useState("");
+
   useEffect(() => {
-    const fetchConnectedUsers = async () => {
+    const fetchConnectionCounts = async () => {
+      if (!userId) return;
+
       try {
         const token = await getToken();
+        const headers = { Authorization: `Bearer ${token}` };
+
         const res = await axios.get(
-          "https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/connections/getAcceptedRequests",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          `https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/connection-counts/${userId}`,
+          { headers }
         );
-        setConnectedUsers(res.data.data || []);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching connected users:", error);
-        setLoading(false);
+
+        setConnectionCounts(res.data.data);
+      } catch (err) {
+        console.error("Error fetching connection counts:", err);
       }
     };
 
-    fetchConnectedUsers();
-  }, [getToken]);
+    fetchConnectionCounts();
+  }, [userId]);
 
-  // Select user from URL param or first connected user
-  useEffect(() => {
-    if (paramUserId && connectedUsers.length > 0) {
-      const user = connectedUsers.find((u) => u._id === paramUserId);
-      if (user) setSelectedUser(user);
-    } else if (!paramUserId && connectedUsers.length > 0) {
-      setSelectedUser(connectedUsers[0]);
+  // Fetch connection status
+  const fetchConnectionStatus = async (userMongoId) => {
+    try {
+      const token = await getToken();
+      const statusRes = await axios.get(
+        `https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/connections/status/${userMongoId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setIsConnected(statusRes.data.isConnected);
+      setIsPending(statusRes.data.isPending);
+      setAmRequester(statusRes.data.amRequester);
+    } catch (err) {
+      console.error("Error fetching connection status:", err);
     }
-  }, [paramUserId, connectedUsers]);
+  };
 
-  // Fetch messages for selected user
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (!selectedUser) return;
-
+    const fetchData = async () => {
       try {
+        setLoading(true);
         const token = await getToken();
-        const res = await axios.get(
-          `https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/messages/${selectedUser._id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+        const headers = { Authorization: `Bearer ${token}` };
+
+        // Fetch user data
+        const userRes = await axios.get(
+          `https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/profile/${userId}`,
+          { headers }
         );
-        setMessages(res.data.messages || []);
-      } catch (error) {
-        console.error("Error fetching messages:", error);
+        console.log("userData", userRes.data.user);
+        setUser(userRes.data.user);
+
+        // Fetch connection status first
+        await fetchConnectionStatus(userRes.data.user._id);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchMessages();
-  }, [selectedUser, getToken]);
+    fetchData();
+  }, [userId, getToken]);
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedUser) return;
+  // Fetch posts only when connected
+  useEffect(() => {
+    const fetchPosts = async () => {
+      if (!user?._id || !isConnected) return;
 
+      try {
+        const token = await getToken();
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const postsRes = await axios.get(
+          `https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/posts/${userId}`,
+          { headers }
+        );
+        setPosts(postsRes.data.posts || []);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+      }
+    };
+
+    fetchPosts();
+  }, [user?._id, isConnected]);
+
+  // Send connection request
+  const handleSendRequest = async (msg = "") => {
     try {
       const token = await getToken();
       await axios.post(
-        "https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/messages/send",
+        "https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/connections/sendRequest",
         {
-          receiverId: selectedUser._id,
-          content: newMessage,
+          receiverId: user._id,
+          message: msg,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      setMessages([
-        ...messages,
-        {
-          sender: currentUser.id,
-          receiver: selectedUser._id,
-          content: newMessage,
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-      setNewMessage("");
-    } catch (error) {
-      console.error("Error sending message:", error);
+      setIsPending(true);
+      setAmRequester(true);
+      setShowModal(false);
+      setMessage("");
+    } catch (err) {
+      console.error("Error sending request:", err);
+      alert("Failed to send connection request. Please try again.");
     }
   };
 
-  const filteredUsers = connectedUsers.filter((user) =>
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Cancel connection request
+  const handleCancelRequest = async () => {
+    try {
+      const token = await getToken();
+      await axios.post(
+        "https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app/api/v1/connections/cancelRequest",
+        { receiverId: user._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setIsPending(false);
+      setAmRequester(false);
+    } catch (err) {
+      console.error("Error cancelling request:", err);
+      alert("Failed to cancel request. Please try again.");
+    }
+  };
+
+  // Poll for connection status updates
+  useEffect(() => {
+    if (!user?._id || !isPending) return;
+
+    const interval = setInterval(async () => {
+      await fetchConnectionStatus(user._id);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [user?._id, isPending]);
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <div className="flex justify-center items-center mx-auto min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen bg-card w-full flex items-center justify-center">
+          <p className="text-xl text-red-500">User not found</p>
+        </div>
+      </>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col min-h-screen w-full">
       <Header />
+      <div className="flex-1 bg-card w-full">
+        {/* Banner */}
+        <div className="h-52 bg-background relative flex items-end">
+          <div className="absolute bottom-[-60px] left-8">
+            <img
+              src={user.profileImage || "https://via.placeholder.com/150"}
+              alt={user.name}
+              className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover"
+            />
+          </div>
+        </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar - Connected Users */}
-        <div className="w-80 border-r border-border bg-card flex flex-col">
-          <div className="p-4 border-b border-border">
-            <h2 className="text-xl font-bold mb-3">Chats</h2>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search users..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+        {/* Profile Info */}
+        <div className="px-8 mt-20 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground">{user.name}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
-            {loading ? (
-              <div className="flex justify-center items-center h-full">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : filteredUsers.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                <MessageCircle className="h-12 w-12 text-muted-foreground mb-2" />
-                <p className="text-muted-foreground font-medium">
-                  No connected users
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Connect with users to start chatting
-                </p>
-              </div>
+          {/* Connection buttons */}
+          <div className="flex gap-3 mt-6 sm:mt-0">
+            {isConnected ? (
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => navigate(`/chat/${user._id}`)}
+              >
+                Message
+              </Button>
+            ) : isPending && amRequester ? (
+              <Button
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={handleCancelRequest}
+              >
+                Cancel Request
+              </Button>
+            ) : isPending && !amRequester ? (
+              <Button
+                className="bg-gray-500 text-white cursor-not-allowed"
+                disabled
+              >
+                Request Pending
+              </Button>
             ) : (
-              filteredUsers.map((user) => (
-                <div
-                  key={user._id}
-                  onClick={() => {
-                    setSelectedUser(user);
-                    navigate(`/chat/${user._id}`);
-                  }}
-                  className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50 transition ${
-                    selectedUser?._id === user._id ? "bg-muted" : ""
-                  }`}
-                >
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={user.profileImage} alt={user.name} />
-                    <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold truncate">{user.name}</h3>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-              ))
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => setShowModal(true)}
+              >
+                Connect
+              </Button>
             )}
           </div>
         </div>
 
-        {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col bg-background">
-          {selectedUser ? (
-            <>
-              {/* Chat Header */}
-              <div className="p-4 border-b border-border bg-card flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src={selectedUser.profileImage}
-                    alt={selectedUser.name}
-                  />
-                  <AvatarFallback>
-                    {selectedUser.name?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-semibold">{selectedUser.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedUser.email}
-                  </p>
-                </div>
+        {/* Bio Section - Always visible */}
+        {user.bio && (
+          <div className="mt-8 px-8">
+            <div className="bg-muted/40 shadow-md rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="w-5 h-5 text-muted-foreground" />
+                <h2 className="text-xl font-semibold text-foreground">About</h2>
               </div>
+              <p className="text-muted-foreground leading-relaxed">
+                {user.bio}
+              </p>
+            </div>
+          </div>
+        )}
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-muted-foreground">
-                      No messages yet. Start the conversation!
-                    </p>
+        {/* Contact Info - Only visible if connected */}
+        {isConnected && (user.phone || user.email) && (
+          <div className="mt-6 px-8">
+            <div className="bg-muted/40 shadow-md rounded-xl p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                Contact Information
+              </h2>
+              <div className="space-y-3">
+                {user.email && (
+                  <div className="flex items-center gap-3">
+                    <Mail className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Email</p>
+                      <p className="text-foreground">{user.email}</p>
+                    </div>
                   </div>
-                ) : (
-                  messages.map((msg, index) => {
-                    const isSender = msg.sender === currentUser.id;
-                    return (
-                      <div
-                        key={index}
-                        className={`flex ${
-                          isSender ? "justify-end" : "justify-start"
-                        }`}
-                      >
-                        <div
-                          className={`max-w-[70%] rounded-lg p-3 ${
-                            isSender
-                              ? "bg-blue-600 text-white"
-                              : "bg-muted text-foreground"
-                          }`}
-                        >
-                          <p className="break-words">{msg.content}</p>
-                          <p
-                            className={`text-xs mt-1 ${
-                              isSender
-                                ? "text-blue-100"
-                                : "text-muted-foreground"
-                            }`}
-                          >
-                            {new Date(msg.createdAt).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
+                )}
+                {user.phone && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Phone</p>
+                      <p className="text-foreground">{user.phone}</p>
+                    </div>
+                  </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
 
-              {/* Message Input */}
-              <div className="p-4 border-t border-border bg-card">
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Type a message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") handleSendMessage();
-                    }}
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!newMessage.trim()}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <MessageCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-xl font-semibold text-muted-foreground">
-                  Select a user to start chatting
+        {/* Stats */}
+        <div className="mt-8 px-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="bg-muted/40 shadow-md rounded-xl p-6 text-center">
+            <h3 className="text-3xl font-bold text-foreground">
+              {connectionCounts?.acceptedCount || 0}
+            </h3>
+            <p className="text-muted-foreground text-sm">Connections</p>
+          </div>
+          <div className="bg-muted/40 shadow-md rounded-xl p-6 text-center">
+            <h3 className="text-3xl font-bold text-foreground">
+              {isConnected ? posts.length : "🔒"}
+            </h3>
+            <p className="text-muted-foreground text-sm">Posts</p>
+          </div>
+        </div>
+
+        {/* Posts Section */}
+        <div className="mt-10 px-8 mb-12">
+          <div className="bg-muted/40 shadow-md rounded-xl p-6 w-full">
+            <h2 className="text-2xl font-semibold text-foreground">
+              User Posts
+            </h2>
+
+            {/* Show posts only if connected */}
+            {isConnected ? (
+              posts.length > 0 ? (
+                <ul className="mt-4 space-y-4">
+                  {posts.map((post) => (
+                    <Link
+                      to={`/feed/${post._id}`}
+                      className="group block"
+                      key={post._id}
+                    >
+                      <li className="p-4 border rounded-lg shadow hover:shadow-md transition bg-card">
+                        {post.imageUrl && (
+                          <img
+                            src={post.imageUrl}
+                            alt={post.title}
+                            className="w-full h-48 object-cover rounded-lg mb-3"
+                          />
+                        )}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                            {post.type}
+                          </span>
+                          <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded">
+                            {post.category}
+                          </span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {post.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {post.description}
+                        </p>
+                      </li>
+                    </Link>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-3 text-muted-foreground">
+                  This user hasn't created any posts yet.
                 </p>
+              )
+            ) : (
+              // Locked state for non-connected users
+              <div className="mt-6 text-center py-12">
+                <div className="flex justify-center mb-4">
+                  <div className="bg-muted rounded-full p-4">
+                    <Lock className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Posts are Private
+                </h3>
+                <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+                  Connect with {user.name} to view their posts and activity.
+                </p>
+
+                {isPending && amRequester ? (
+                  <p className="text-sm text-yellow-600 dark:text-yellow-500">
+                    Your connection request is pending...
+                  </p>
+                ) : isPending && !amRequester ? (
+                  <p className="text-sm text-yellow-600 dark:text-yellow-500">
+                    {user.name} sent you a connection request. Check your
+                    notifications!
+                  </p>
+                ) : (
+                  <Button
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => setShowModal(true)}
+                  >
+                    Send Connection Request
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Connect Modal */}
+        {showModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-96 shadow-xl">
+              <h2 className="text-xl font-semibold mb-4 text-foreground">
+                Send Connection Request
+              </h2>
+              <p className="text-muted-foreground mb-2">
+                Send a connection request to {user.name}
+              </p>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Add a message (optional)"
+                className="w-full border rounded p-2 mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-600 min-h-[100px]"
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground mb-4">
+                {message.length}/500 characters
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowModal(false);
+                    setMessage("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => handleSendRequest(message)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {message ? "Send with Message" : "Send Request"}
+                </Button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

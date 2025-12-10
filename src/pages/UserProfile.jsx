@@ -189,7 +189,7 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background w-full">
       <Header />
 
       <div className="flex-1 w-full">

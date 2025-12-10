@@ -75,7 +75,7 @@ export default function UnifiedNotifications() {
       );
       setAcceptedNotifications(newlyAccepted);
     } catch (e) {
-      console.log("❌ Accepted Error:", e);
+      console.error("❌Accepted Error:", e);
     }
   };
 
@@ -167,7 +167,7 @@ export default function UnifiedNotifications() {
       console.log("res.data.notifications", res.data.notifications);
       setComments(res.data.notifications || []);
     } catch (e) {
-      console.log("❌ Comment Error:", e);
+      console.error("❌ Comment Error:", e);
     }
   };
 
