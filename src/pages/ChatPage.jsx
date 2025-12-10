@@ -20,7 +20,7 @@ export default function ChatPage() {
   const authAxios = async () => {
     const token = await getToken();
     return axios.create({
-      baseURL: "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app",
+      baseURL: "https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app",
       headers: { Authorization: `Bearer ${token}` },
     });
   };
@@ -38,7 +38,7 @@ export default function ChatPage() {
         setMeId(myId);
 
         socketRef.current = io(
-          "https://pure-helenka-abdulrehmankashif-2b35ede6.koyeb.app",
+          "https://net-dareen-abdulrehmankashif-9dc9dc64.koyeb.app",
           {
             query: { userId: myId },
           }
