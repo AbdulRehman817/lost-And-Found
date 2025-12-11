@@ -275,7 +275,7 @@ export default function SignUp() {
                   {/* Profile Image */}
 
                   <div className="space-y-2">
-                    <label>Profile Image (Optional)</label>
+                    <label>Profile Image </label>
                     <div className="flex items-center gap-4">
                       {imagePreview ? (
                         <div className="relative">
