@@ -3,17 +3,19 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { io } from "socket.io-client";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Header } from "../components/Header";
+
 export default function ChatPage() {
   const { getToken } = useAuth();
-  const [loading, setLoading] = useState(true);
   const [meId, setMeId] = useState(null);
   const [users, setUsers] = useState([]);
   const [selected, setSelected] = useState(null);
   const [msgs, setMsgs] = useState([]);
   const [text, setText] = useState("");
   const [typingUserId, setTypingUserId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const socketRef = useRef(null);
   const scrollRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -77,8 +79,10 @@ export default function ChatPage() {
         socketRef.current.on("stop-typing", () => setTypingUserId(null));
 
         await loadUsers(api);
+        setLoading(false);
       } catch (err) {
         console.error("init error", err);
+        setLoading(false);
       }
     })();
 
@@ -103,10 +107,12 @@ export default function ChatPage() {
   const openChat = async (user) => {
     setSelected(user);
     setMsgs([]);
+    setLoadingMessages(true);
     const api = await authAxios();
     const res = await api.get(`/api/v1/chat/messages/${user._id}`);
     const all = res.data.allMessages || res.data;
     setMsgs(all || []);
+    setLoadingMessages(false);
     scrollToBottom();
   };
 
@@ -143,7 +149,6 @@ export default function ChatPage() {
 
   return (
     <>
-      {" "}
       {!loading ? (
         <div className="flex flex-col h-screen w-full">
           <Header />
@@ -216,7 +221,11 @@ export default function ChatPage() {
                     ref={scrollRef}
                     className="flex-1 p-4 overflow-auto flex flex-col gap-3 bg-[#111b21]"
                   >
-                    {msgs.length ? (
+                    {loadingMessages ? (
+                      <div className="flex items-center justify-center flex-1">
+                        <Loader2 className="w-6 h-6 text-[#00a884] animate-spin" />
+                      </div>
+                    ) : msgs.length ? (
                       msgs.map((m, i) => (
                         <div
                           key={i}
@@ -272,8 +281,8 @@ export default function ChatPage() {
           </div>
         </div>
       ) : (
-        <div className="flex justify-center items-center mx-auto">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="flex justify-center items-center h-screen w-full bg-[#0b141a]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00a884]"></div>
         </div>
       )}
     </>
