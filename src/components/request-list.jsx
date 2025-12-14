@@ -13,7 +13,6 @@ export default function RequestsList() {
   const { getToken } = useAuth();
 
   useEffect(() => {
-    // Load dismissed IDs from localStorage
     const stored = localStorage.getItem("dismissedNotifications");
     if (stored) {
       setDismissedIds(JSON.parse(stored));

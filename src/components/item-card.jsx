@@ -63,12 +63,7 @@ export function ItemCard({
               ? "secondary"
               : "default"
           }
-          className={cn("ml-auto font-semibold shadow-md", {
-            "bg-green-100 text-green-800 border-green-200 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-200 dark:border-green-800":
-              status === "Reunited",
-          })}
         >
-          {status === "Reunited" && <CheckCircle className="mr-1 h-3 w-3" />}
           {type}
         </Badge>
       </CardHeader>

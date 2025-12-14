@@ -18,7 +18,7 @@ import {
 import { cn } from "../lib/utils";
 import { Link, useParams } from "react-router-dom";
 import CommentBox from "../components/CommentBox";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
@@ -28,6 +28,7 @@ export default function PostDetails() {
   const [post, setPost] = useState(null);
 
   const { getToken } = useAuth();
+  const { user } = useUser(); // Get current user
   const navigate = useNavigate();
 
   // 🔹 Fetch post details
@@ -69,6 +70,9 @@ export default function PostDetails() {
 
     fetchPost();
   }, [id]);
+
+  // Check if the current user is viewing their own post
+  const isOwnPost = user?.id === post?.poster?.clerkId;
 
   if (!post)
     return (
@@ -157,10 +161,31 @@ export default function PostDetails() {
                 </CardContent>
               </Card>
 
-              {/* Poster */}
+              {/* Poster - Conditional Link */}
               <Card>
                 <CardContent className="p-6">
-                  <Link to={`/profile/${post.poster._id}`}>
+                  {!isOwnPost ? (
+                    <Link to={`/profile/${post.poster._id}`}>
+                      <div className="flex items-center gap-4 hover:opacity-80 transition-opacity cursor-pointer">
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage
+                            src={post.poster.imageUrl}
+                            className="object-cover"
+                            alt={post.poster.name}
+                          />
+                          <AvatarFallback>
+                            {post.poster.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold">{post.poster.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Poster
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  ) : (
                     <div className="flex items-center gap-4">
                       <Avatar className="w-12 h-12">
                         <AvatarImage
@@ -173,11 +198,16 @@ export default function PostDetails() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-semibold">{post.poster.name}</p>
+                        <p className="font-semibold flex items-center gap-2">
+                          {post.poster.name}
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                            You
+                          </span>
+                        </p>
                         <p className="text-sm text-muted-foreground">Poster</p>
                       </div>
                     </div>
-                  </Link>
+                  )}
                 </CardContent>
               </Card>
             </div>
