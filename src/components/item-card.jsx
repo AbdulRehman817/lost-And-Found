@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
-import { MapPin, CheckCircle } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
@@ -25,8 +25,6 @@ export function ItemCard({
   imageHint,
   userId,
   createdAt,
-  showManagement = false,
-  onMarkAsReunited,
 }) {
   return (
     <Card className="flex py-0 h-full bg-background border border-border flex-col overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
@@ -79,14 +77,6 @@ export function ItemCard({
                 className="object-cover w-full h-full rounded-lg transition-transform duration-300 group-hover:scale-105"
                 data-ai-hint={imageHint}
               />
-              {status === "Reunited" && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <div className="text-center text-white">
-                    <CheckCircle className="h-10 w-10 mx-auto text-green-400" />
-                    <p className="font-bold mt-1">Reunited!</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </Link>
@@ -102,27 +92,9 @@ export function ItemCard({
             <span className="truncate mb-[8px]">{location}</span>
           </div>
 
-          {showManagement ? (
-            <Button
-              onClick={onMarkAsReunited}
-              disabled={status === "Reunited"}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              {status === "Reunited" ? "Reunited!" : "Mark as Reunited"}
-            </Button>
-          ) : (
-            <Button
-              asChild
-              className="w-full mt-[15px]"
-              variant="secondary"
-              disabled={status === "Reunited"}
-            >
-              <Link to={`/feed/${_id}`}>
-                {status === "Reunited" ? "View Reunited Item" : "View Details"}
-              </Link>
-            </Button>
-          )}
+          <Button asChild className="w-full mt-[15px]" variant="secondary">
+            <Link to={`/feed/${_id}`}>View Details</Link>
+          </Button>
         </div>
       </CardContent>
       {/* Footer */}

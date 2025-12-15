@@ -161,7 +161,7 @@ export default function PostDetails() {
                 </CardContent>
               </Card>
 
-              {/* Poster - Conditional Link */}
+              {/* Poster - Conditional Link and Display */}
               <Card>
                 <CardContent className="p-6">
                   {!isOwnPost ? (
@@ -191,19 +191,14 @@ export default function PostDetails() {
                         <AvatarImage
                           src={post.poster.imageUrl}
                           className="object-cover"
-                          alt={post.poster.name}
+                          alt="You"
                         />
                         <AvatarFallback>
                           {post.poster.name.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-semibold flex items-center gap-2">
-                          {post.poster.name}
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                            You
-                          </span>
-                        </p>
+                        <p className="font-semibold text-lg">You</p>
                         <p className="text-sm text-muted-foreground">Poster</p>
                       </div>
                     </div>

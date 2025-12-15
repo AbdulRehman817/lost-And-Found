@@ -15,7 +15,7 @@ export default function CommentBox() {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState("");
-  const [postAuthorId, setPostAuthorId] = useState(null); // Store post author ID
+  const [postAuthorId, setPostAuthorId] = useState(null);
 
   // Fetch post details to get author ID
   const fetchPostAuthor = async () => {
@@ -29,7 +29,6 @@ export default function CommentBox() {
           },
         }
       );
-      // Adjust based on your API response structure
       setPostAuthorId(
         response.data.post?.userId?._id || response.data.post?.userId
       );
@@ -59,7 +58,7 @@ export default function CommentBox() {
   // Check if current user is the post author
   const isPostAuthor = user?.id === postAuthorId;
 
-  // 🔹 Add new comment
+  // Add new comment (top-level)
   const handlePostComment = async () => {
     if (!newComment.trim() || isPostAuthor) return;
 
@@ -89,7 +88,7 @@ export default function CommentBox() {
     }
   };
 
-  // 🔹 Add reply to comment
+  // Add reply to comment (post author CAN reply to others' comments)
   const handlePostReply = async (parentCommentId) => {
     if (!replyText.trim()) return;
 
@@ -129,13 +128,13 @@ export default function CommentBox() {
     }
   };
 
-  // 🔹 Show reply box
+  // Show reply box
   const showReplyBox = (commentId) => {
     setReplyingTo(commentId);
     setReplyText("");
   };
 
-  // 🔹 Hide reply box
+  // Hide reply box
   const hideReplyBox = () => {
     setReplyingTo(null);
     setReplyText("");
@@ -224,7 +223,7 @@ export default function CommentBox() {
                     </p>
                   </div>
 
-                  {/* Comment actions */}
+                  {/* Comment actions - Always show reply button for everyone */}
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => showReplyBox(comment._id)}
@@ -255,7 +254,7 @@ export default function CommentBox() {
                 </div>
               </div>
 
-              {/* Reply Box */}
+              {/* Reply Box - Anyone can reply to comments */}
               {replyingTo === comment._id && (
                 <div className="mt-4 ml-14">
                   <div className="bg-gray-800/20 rounded-xl p-4 border border-gray-700/50">
@@ -449,7 +448,7 @@ export default function CommentBox() {
               You cannot comment on your own post
             </h4>
             <p className="text-sm text-gray-500">
-              You can reply to other users' comments
+              However, you can reply to other users' comments below
             </p>
           </div>
         </div>
